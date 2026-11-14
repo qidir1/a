@@ -9,17 +9,6 @@
 <meta property="og:title" content="1 Qidiruv — Barchasi bitta qidiruvda">
 <meta property="og:description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling. Bepul, tez va qulay!">
 <title>1 Qidiruv — Barchasi bitta qidiruvda</title>
-<link rel="preconnect" href="https://<!DOCTYPE html>
-<html lang="uz">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="author" content="Komuljonov Qutlimurod">
-<meta name="description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling! 1 Qidiruv — bepul, ro'yxatdan o'tishsiz, to'liq o'zbek tilida.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="1 Qidiruv — Barchasi bitta qidiruvda">
-<meta property="og:description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling. Bepul, tez va qulay!">
-<title>1 Qidiruv — Barchasi bitta qidiruvda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -245,8 +234,8 @@ tailwind.config = {
 <div id="authModal" class="hidden fixed inset-0 z-[65] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
   <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-bold">Hisobga kirish</h2>
-      <button id="aClose" type="button" aria-label="Yopish" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
+      <div><h2 class="text-lg font-bold">Hisobga kirish</h2><p class="text-xs text-slate-500 mt-0.5">Saytdan foydalanish uchun hisob oching yoki kiring</p></div>
+      <button id="aClose" type="button" aria-label="Yopish" class="hidden w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
     </div>
     <div class="mt-4 flex gap-2">
       <button id="aTabLogin" type="button" class="pill-active flex-1 text-sm font-medium px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 transition">Kirish</button>
@@ -378,6 +367,7 @@ tailwind.config = {
     <div class="skeleton h-28 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div></div>`;
 
   function doSearch(raw) {
+    if (!currentUser()) { refreshAuth(); return; }
     const q = (raw || '').trim();
     if (!q) {
       section.classList.remove('hidden');
@@ -513,6 +503,7 @@ tailwind.config = {
       <div class="p-3">
         <div class="text-sm font-semibold truncate">${esc(r.title)}</div>
         <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish</div>
+        ${r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong></div>` : ''}
         ${r.desc ? `<p class="mt-2 text-sm font-semibold leading-snug px-3 py-2 rounded-lg border-l-4 border-brand bg-brand/10 text-brand dark:text-accent line-clamp-3">✨ ${esc(r.desc)}</p>` : ''}
         <div class="mt-3 flex gap-2">
           <button data-open="${r.id}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
@@ -550,12 +541,13 @@ tailwind.config = {
 
   $('#uploadForm').addEventListener('submit', async e => {
     e.preventDefault();
+    if (!currentUser()) { refreshAuth(); return; }
     const f = upFile.files[0];
     if (!f) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
     if (f.size > MAX) { upStatus.textContent = 'Fayl hajmi 50 MB dan oshmasligi kerak.'; return; }
     upStatus.textContent = 'Yuklanmoqda...';
     try {
-      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, at: Date.now() });
+      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, viewers: [], owner: currentUser(), ownerName: (getUsers()[currentUser()] || {}).name || '', at: Date.now() });
       upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
       e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
       renderMine(); renderTop(); toast('Yuklandi!');
@@ -598,6 +590,7 @@ tailwind.config = {
     if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
   }
   async function openFile(id) {
+    if (!currentUser()) { refreshAuth(); return; }
     const remote = String(id).startsWith('r');
     let r = null;
     try { r = remote ? catalog.find(c => c.id === id) : await getFile(Number(id)); } catch (e) { r = null; }
@@ -629,7 +622,9 @@ tailwind.config = {
     else body = `<div class="py-12 text-center text-slate-500"><div class="w-14 h-14 mx-auto rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="file" class="w-7 h-7"></i></div><p class="mt-4 text-sm">Bu turdagi faylni brauzerda ochib bo'lmaydi. Uni yuklab olib oching.</p></div>`;
     $('#vTitle').textContent = r.title;
     $('#vMeta').textContent = `${r.name} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish`;
-    $('#vBody').innerHTML = (r.desc ? `<p class="mb-4 text-base font-semibold leading-snug px-4 py-3 rounded-xl border-l-4 border-brand bg-brand/10 text-brand dark:text-accent">✨ ${esc(r.desc)}</p>` : '') + body;
+    $('#vBody').innerHTML = body
+      + (r.ownerName ? `<p class="mt-4 text-sm text-slate-500">👤 Yuklagan: <strong class="text-slate-800 dark:text-slate-100">${esc(r.ownerName)}</strong></p>` : '')
+      + (r.desc ? `<p class="mt-3 text-base font-semibold leading-snug px-4 py-3 rounded-xl border-l-4 border-brand bg-gradient-to-r from-brand/10 to-accent/10 text-brand dark:text-accent">✨ ${esc(r.desc)}</p>` : '');
     $('#vFoot').innerHTML = `<a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>`;
     viewer.classList.remove('hidden'); viewer.classList.add('flex');
     icons(); renderTop(); renderMine();
@@ -663,7 +658,7 @@ tailwind.config = {
         ${thumb}
         <div class="min-w-0 flex-1"><div class="font-semibold truncate">${esc(r.title)}</div>
           ${r.desc ? `<div class="text-sm font-medium text-brand dark:text-accent truncate">✨ ${esc(r.desc)}</div>` : ''}
-          <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish</div></div>
+          <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.ownerName ? ' • 👤 ' + esc(r.ownerName) : ''}</div></div>
         <button data-open="${r.id}" class="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button></div>`;
     }).join('');
     icons();
@@ -693,6 +688,7 @@ tailwind.config = {
     chip.textContent = key ? '👤 ' + users[key].name : '';
     chip.classList.toggle('sm:inline-flex', !!key);
     $('#authBtn').textContent = key ? 'Chiqish' : 'Kirish';
+    if (!key && authModal.classList.contains('hidden')) openAuth(Object.keys(users).length ? 'login' : 'reg');
   }
   function setAuthMode(m) {
     authMode = m;
@@ -707,6 +703,7 @@ tailwind.config = {
     setTimeout(() => $('#aUser').focus(), 50);
   }
   function closeAuth() {
+    if (!currentUser()) return;
     authModal.classList.add('hidden'); authModal.classList.remove('flex');
     $('#authForm').reset(); $('#aErr').textContent = '';
   }
@@ -754,7 +751,7 @@ tailwind.config = {
         id: 'r' + i, remote: true, key: String(x.file), title: String(x.title), desc: String(x.desc || ''),
         name: String(x.file).split('/').pop(), url: encodeURI(String(x.file)),
         kind: ['img', 'vid', 'doc'].includes(x.type) ? x.type : extKind(String(x.file)),
-        size: Number(x.size) || 0, views: getRemoteViews(String(x.file)), at: 0
+        size: Number(x.size) || 0, views: getRemoteViews(String(x.file)), ownerName: String(x.by || ''), at: 0
       }));
     } catch (e) {}
   })());
@@ -765,626 +762,17 @@ tailwind.config = {
     return l.concat(catalog);
   }
 
-  refreshAuth();
-  renderMine();
-  renderTop();
-  icons();
-})();
-</script>
-</body>
-</html>
-fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  darkMode: 'class',
-  theme: { extend: {
-    fontFamily: { sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'] },
-    colors: { brand: '#2563EB', slate9: '#0F172A', accent: '#38BDF8', lightbg: '#F8FAFC', darkbg: '#090D16' }
-  } }
-};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-<style>
-  html { scroll-behavior: smooth; }
-  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .search-glow:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,.35), 0 0 40px rgba(56,189,248,.25); border-color: #2563EB; }
-  .hero-bg { background: radial-gradient(60% 50% at 50% 0%, rgba(37,99,235,.18), transparent 70%), radial-gradient(40% 40% at 85% 20%, rgba(56,189,248,.14), transparent 70%); }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { animation: spin .8s linear infinite; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-  .fade-up { animation: fadeUp .45s ease both; }
-  .skeleton { background: linear-gradient(90deg, rgba(148,163,184,.15), rgba(148,163,184,.3), rgba(148,163,184,.15)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
-  @keyframes shimmer { to { background-position: -200% 0; } }
-  .pill-active { background: #2563EB; color: #fff; border-color: #2563EB; }
-  kbd { font-family: inherit; }
-</style>
-</head>
-<body class="bg-lightbg text-slate-800 dark:bg-darkbg dark:text-slate-200 transition-colors duration-300 antialiased">
-
-<!-- HEADER -->
-<header class="sticky top-0 z-40 backdrop-blur bg-lightbg/80 dark:bg-darkbg/80 border-b border-slate-200 dark:border-slate-800">
-  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-    <a href="#bosh" class="flex items-center gap-2 font-extrabold text-lg">
-      <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-accent grid place-items-center text-white"><i data-lucide="search" class="w-5 h-5"></i></span>
-      <span>1 Qidiruv</span>
-    </a>
-    <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600 dark:text-slate-300" aria-label="Asosiy menyu">
-      <a href="#bosh" class="hover:text-brand">Bosh sahifa</a>
-      <a href="#imkoniyatlar" class="hover:text-brand">Imkoniyatlar</a>
-      <a href="#mashhur" class="hover:text-brand">Mashhur so'rovlar</a>
-      <a href="#top" class="hover:text-brand">Top fayllar</a>
-      <a href="#yuklash" class="hover:text-brand">Fayl yuklash</a>
-      <a href="#aloqa" class="hover:text-brand">Aloqa</a>
-    </nav>
-    <div class="flex items-center gap-2">
-      <button id="themeBtn" title="Tungi / Kunduzgi rejim" aria-label="Tungi / Kunduzgi rejim" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-        <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
-        <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
-      </button>
-      <button id="menuBtn" class="md:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center" aria-label="Menyuni ochish"><i data-lucide="menu" class="w-5 h-5"></i></button>
-    </div>
-  </div>
-  <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex-col gap-3 text-sm font-medium">
-    <a href="#bosh" class="block py-1">Bosh sahifa</a>
-    <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
-    <a href="#mashhur" class="block py-1">Mashhur so'rovlar</a>
-    <a href="#yuklash" class="block py-1">Fayl yuklash</a>
-    <a href="#aloqa" class="block py-1">Aloqa</a>
-  </div>
-</header>
-
-<main>
-<!-- HERO -->
-<section id="bosh" class="hero-bg">
-  <div class="max-w-4xl mx-auto px-4 pt-14 pb-8 sm:pt-20 text-center">
-    <span class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-brand/10 text-brand border border-brand/20"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Bepul • Tez • O'zbek tilida</span>
-    <h1 class="mt-5 text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">Dunyo ma'lumotlari <span class="bg-gradient-to-r from-brand to-accent bg-clip-text text-transparent">bir soniyada</span></h1>
-    <p class="mt-4 text-base sm:text-xl font-semibold text-slate-700 dark:text-slate-200">Barchasi bitta qidiruvda — tez, oson va qulay.</p>
-    <p class="mt-3 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-400">Kerakli rasm, video yoki hujjatni yozing — bir zumda topasiz, ochib ko'rasiz va yuklab olasiz. O'z faylingizni ham yuklab, boshqalar bilan ulashing!</p>
-    <div class="mt-5 flex flex-wrap justify-center gap-2 text-xs sm:text-sm font-medium">
-      <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">⚡ Bir soniyada natija</span>
-      <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🆓 Mutlaqo bepul</span>
-      <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🔓 Ro'yxatdan o'tish shart emas</span>
-    </div>
-
-    <form id="searchForm" class="mt-9" role="search" autocomplete="off">
-      <div class="search-glow flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-lg transition">
-        <i data-lucide="search" class="w-5 h-5 ml-2 text-slate-400 shrink-0"></i>
-        <input id="q" type="text" maxlength="120" aria-label="Qidiruv maydoni" placeholder="Nimani qidirmoqchisiz? Masalan: Ob-havo, Dasturlash, Yangiliklar..." class="flex-1 min-w-0 bg-transparent outline-none px-1 py-3 text-sm sm:text-base placeholder:text-slate-400">
-        <kbd class="hidden sm:inline-block text-xs px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-slate-400" title="Qidiruvga o'tish uchun / bosing">/</kbd>
-        <button type="button" id="clearBtn" class="hidden text-sm font-medium px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">Tozalash</button>
-        <button type="submit" class="px-5 sm:px-7 py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm sm:text-base transition shrink-0">Qidirish</button>
-      </div>
-    </form>
-
-    <div id="tabs" class="mt-6 flex flex-wrap justify-center gap-2" role="tablist" aria-label="Qidiruv turlari">
-      <button data-cat="all" class="tab pill-active text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 transition" role="tab">Barchasi</button>
-      <button data-cat="web" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Veb-saytlar</button>
-      <button data-cat="img" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Rasmlar</button>
-      <button data-cat="vid" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Videolar</button>
-      <button data-cat="doc" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Hujjatlar</button>
-      <button data-cat="ai" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">AI Javob</button>
-    </div>
-  </div>
-</section>
-
-<!-- RESULTS -->
-<section id="natijalar" class="max-w-4xl mx-auto px-4 pb-10 hidden" aria-live="polite">
-  <div id="resultMeta" class="text-sm text-slate-500 mb-4"></div>
-  <div id="results" class="space-y-6"></div>
-</section>
-
-<!-- TRENDING -->
-<section id="mashhur" class="max-w-4xl mx-auto px-4 py-10 text-center">
-  <h2 class="text-xl sm:text-2xl font-bold">Mashhur so'rovlar</h2>
-  <p class="text-sm text-slate-500 mt-1">Tezkor qidirish uchun mavzulardan birini tanlang</p>
-  <div class="mt-6 flex flex-wrap justify-center gap-3">
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🔥 O'zbekiston yangiliklari</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">💻 IT kurslar</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">💵 Dollar kursi</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">⛅ Ob-havo ma'lumoti</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🎓 Oliy ta'lim kirish</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🍲 Palov retsepti</button>
-  </div>
-</section>
-
-<!-- TOP FILES -->
-<section id="top" class="max-w-4xl mx-auto px-4 py-10">
-  <div class="flex items-center gap-3 mb-5">
-    <span class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-500 grid place-items-center"><i data-lucide="trophy" class="w-6 h-6"></i></span>
-    <div>
-      <h2 class="text-xl sm:text-2xl font-bold">Eng ko'p ko'rilgan top fayllar</h2>
-      <p class="text-sm text-slate-500">Foydalanuvchilar yuklagan va eng ko'p ochilgan fayllar reytingi</p>
-    </div>
-  </div>
-  <div id="topList" class="space-y-3"></div>
-</section>
-
-<!-- UPLOAD -->
-<section id="yuklash" class="max-w-4xl mx-auto px-4 py-10">
-  <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
-    <div class="flex items-center gap-3">
-      <span class="w-11 h-11 rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="upload-cloud" class="w-6 h-6"></i></span>
-      <div>
-        <h2 class="text-xl sm:text-2xl font-bold">Fayl yuklash</h2>
-        <p class="text-sm text-slate-500">Rasm, video yoki hujjatingizni yuklang — nomi va kalit so'zlari bo'yicha qidiruvda chiqadi, ochib ko'riladi va yuklab olinadi.</p>
-      </div>
-    </div>
-    <form id="uploadForm" class="mt-6 grid gap-3">
-      <input id="upTitle" type="text" maxlength="100" required placeholder="Fayl nomi (masalan: Toshkent manzarasi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
-      <input id="upDesc" type="text" maxlength="200" placeholder="Qisqa tavsif va kalit so'zlar (ixtiyoriy)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
-      <label id="dropZone" class="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
-        <i data-lucide="file-up" class="w-8 h-8 text-slate-400"></i>
-        <span id="upFileName" class="text-sm text-slate-500">Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko'pi 50 MB)</span>
-        <input id="upFile" type="file" required class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
-      </label>
-      <div class="flex flex-wrap items-center gap-3">
-        <button type="submit" class="px-6 py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Yuklash</button>
-        <span id="upStatus" class="text-sm text-slate-500" aria-live="polite"></span>
-      </div>
-    </form>
-    <div id="myFilesWrap" class="mt-8 hidden">
-      <h3 class="font-bold mb-3">Yuklangan fayllar</h3>
-      <div id="myFiles" class="space-y-2"></div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section id="imkoniyatlar" class="max-w-6xl mx-auto px-4 py-14">
-  <div class="text-center max-w-2xl mx-auto">
-    <h2 class="text-2xl sm:text-4xl font-extrabold">Nega aynan 1 Qidiruv?</h2>
-    <p class="mt-3 text-slate-600 dark:text-slate-400">Soatlab qidirishni unuting. Kerakli narsa bir necha soniyada qo'lingizda — ortiqcha reklama va murakkab sozlamalarsiz.</p>
-  </div>
-  <div class="mt-10 grid gap-5 md:grid-cols-3">
-    <article class="p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:-translate-y-1 hover:shadow-xl transition">
-      <div class="w-12 h-12 rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="zap" class="w-6 h-6"></i></div>
-      <h3 class="mt-5 text-lg font-bold">Chaqqon tezlik</h3>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Yozdingiz — topdingiz. Natijalar bir necha soniyada chiqadi: kutish ham, ortiqcha bosqichlar ham yo'q.</p>
-    </article>
-    <article class="p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:-translate-y-1 hover:shadow-xl transition">
-      <div class="w-12 h-12 rounded-xl bg-accent/15 text-accent grid place-items-center"><i data-lucide="layers" class="w-6 h-6"></i></div>
-      <h3 class="mt-5 text-lg font-bold">Barchasi bir joyda</h3>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Rasm, video va hujjatlar bitta oynada. Qidiring, ochib ko'ring va bir bosishda yuklab oling.</p>
-    </article>
-    <article class="p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:-translate-y-1 hover:shadow-xl transition">
-      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 grid place-items-center"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
-      <h3 class="mt-5 text-lg font-bold">Xavfsiz va maxfiy</h3>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Ro'yxatdan o'tish talab qilinmaydi. Shaxsiy ma'lumotlaringiz so'ralmaydi va qidiruvlaringiz uchinchi shaxslarga berilmaydi.</p>
-    </article>
-  </div>
-</section>
-</main>
-
-<!-- FOOTER -->
-<footer id="aloqa" class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
-  <div class="max-w-6xl mx-auto px-4 py-12 grid gap-8 md:grid-cols-3">
-    <div>
-      <div class="flex items-center gap-2 font-extrabold text-lg">
-        <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-accent grid place-items-center text-white"><i data-lucide="search" class="w-5 h-5"></i></span> 1 Qidiruv
-      </div>
-      <p class="mt-3 text-sm text-slate-500 leading-relaxed">Barchasi bitta qidiruvda — tez, oson va qulay.</p>
-    </div>
-    <div>
-      <h4 class="font-bold mb-3">Tezkor havolalar</h4>
-      <ul class="space-y-2 text-sm text-slate-500">
-        <li><a class="hover:text-brand" href="#bosh">Bosh sahifa</a></li>
-        <li><a class="hover:text-brand" href="#imkoniyatlar">Imkoniyatlar</a></li>
-        <li><a class="hover:text-brand" href="#mashhur">Mashhur so'rovlar</a></li>
-        <li><a class="hover:text-brand" href="#aloqa">Aloqa</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4 class="font-bold mb-3">Sayt haqida ma'lumot</h4>
-      <p class="text-sm text-slate-500">Yaratuvchi: <strong class="text-slate-800 dark:text-slate-100">Uzbekistan FVV</strong></p>
-      <p class="text-sm text-slate-500 mt-2">Qidiruvda faqat foydalanuvchilar yuklagan fayllar ko'rsatiladi.</p>
-    </div>
-  </div>
-  <div class="border-t border-slate-200 dark:border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
-      <p>© 2026 1 Qidiruv. Barcha huquqlar himoyalangan.</p>
-      <p class="font-semibold text-slate-700 dark:text-slate-200">Yaratuvchi: Uzbekistan FVV</p>
-    </div>
-  </div>
-</footer>
-
-<div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 z-[70] px-5 py-3 rounded-xl text-white text-sm font-semibold shadow-xl pointer-events-none" style="opacity:0;transform:translate(-50%,-150%);transition:all .35s ease"></div>
-
-<div id="viewer" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
-  <div class="w-full max-w-3xl max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
-    <div class="flex items-start justify-between gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
-      <div class="min-w-0"><div id="vTitle" class="font-bold truncate"></div><div id="vMeta" class="text-xs text-slate-500 mt-0.5 truncate"></div></div>
-      <button id="vClose" aria-label="Yopish" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
-    </div>
-    <div id="vBody" class="p-4"></div>
-    <div id="vFoot" class="p-4 pt-0"></div>
-  </div>
-</div>
-
-<script>
-(function () {
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const icons = () => { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} };
-  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-  /* Theme */
-  const root = document.documentElement;
-  const saved = (() => { try { return localStorage.getItem('theme'); } catch (e) { return null; } })();
-  if (saved === 'light') root.classList.remove('dark'); else root.classList.add('dark');
-  $('#themeBtn').addEventListener('click', () => {
-    root.classList.toggle('dark');
-    try { localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
-  });
-
-  /* Mobile menu */
-  $('#menuBtn').addEventListener('click', () => $('#mobileMenu').classList.toggle('hidden'));
-  $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => $('#mobileMenu').classList.add('hidden')));
-
-  const input = $('#q'), clearBtn = $('#clearBtn');
-  const section = $('#natijalar'), results = $('#results'), meta = $('#resultMeta');
-  let currentCat = 'all', currentData = null, currentQuery = '', timer = null;
-
-  input.addEventListener('input', () => clearBtn.classList.toggle('hidden', !input.value));
-  clearBtn.addEventListener('click', () => {
-    input.value = ''; clearBtn.classList.add('hidden'); input.focus();
-    section.classList.add('hidden'); currentData = null; clearTimeout(timer);
-  });
-
-  /* "/" shortcut */
-  document.addEventListener('keydown', e => {
-    const tag = (document.activeElement && document.activeElement.tagName) || '';
-    if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
-      e.preventDefault(); input.focus(); input.select();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    if (e.key === 'Escape' && document.activeElement === input) input.blur();
-  });
-
-  /* Tabs */
-  function setTab(cat) {
-    currentCat = cat;
-    $$('.tab').forEach(t => {
-      const on = t.dataset.cat === cat;
-      t.classList.toggle('pill-active', on);
-      t.setAttribute('aria-selected', on);
-    });
-    if (currentData) render();
-  }
-  $$('.tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.cat)));
-
-  /* Quick tags */
-  $$('.tag').forEach(t => t.addEventListener('click', () => {
-    input.value = t.textContent.replace(/^[^\p{L}]+/u, '').trim();
-    clearBtn.classList.remove('hidden');
-    doSearch(input.value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }));
-
-  $('#searchForm').addEventListener('submit', e => { e.preventDefault(); doSearch(input.value); });
-
-  /* Mock data generator */
-  const topics = {
-    'yangilik': { ai: "O'zbekistonda so'nggi kunlarda iqtisodiyot, ta'lim va texnologiya sohalarida yangi loyihalar e'lon qilinmoqda. Eng ishonchli ma'lumot uchun rasmiy axborot agentliklari va davlat idoralarining saytlarini kuzatib borish tavsiya etiladi." },
-    'dollar': { ai: "Valyuta kursi har kuni o'zgarib turadi. Joriy va aniq kursni O'zbekiston Respublikasi Markaziy bankining rasmiy saytidan yoki tijorat banklarining kurs jadvalidan ko'rishingiz mumkin." },
-    'ob-havo': { ai: "Ob-havo ma'lumoti hududga va vaqtga qarab farq qiladi. Kunlik va haftalik prognozni O'zgidromet xizmati hamda ishonchli ob-havo ilovalaridan ko'rish mumkin." },
-    'it': { ai: "IT kurslarni tanlashda avvalo yo'nalishni (veb-dasturlash, mobil ilovalar, ma'lumotlar tahlili, dizayn) aniqlang, so'ng amaliy loyihalar va mentor yordami bor kurslarni afzal ko'ring." },
-    'dastur': { ai: "Dasturlashni o'rganishni Python yoki JavaScript kabi sodda tillardan boshlash qulay. Har kuni kichik amaliy mashqlar bajarish va o'z loyihangizni yaratish eng samarali usul." },
-    'palov': { ai: "An'anaviy palov uchun guruch, sabzi, go'sht, piyoz va zirvak kerak bo'ladi. Muhim jihatlar: sabzini to'g'ri to'g'rash, zirvakni yaxshi qovurish va olovni me'yorida tutish." }
-  };
-  function aiFor(q) {
-    const l = q.toLowerCase();
-    for (const k in topics) if (l.includes(k)) return topics[k].ai;
-    return `«${q}» bo'yicha qisqa xulosa: bu mavzu bo'yicha eng ishonchli ma'lumotni rasmiy manbalar, ta'lim saytlari va mutaxassislar maqolalaridan olish mumkin. Quyida mavzuga oid veb-saytlar, rasmlar, videolar va hujjatlar to'plami berilgan.`;
-  }
-  function build(q) {
-    const s = q.trim(), slug = encodeURIComponent(s.toLowerCase().replace(/\s+/g, '-'));
-    return {
-      ai: aiFor(s),
-      web: [
-        { t: `${s} — to'liq qo'llanma va tushuntirish`, u: `www.malumot.uz/${slug}`, d: `${s} haqida batafsil, tushunarli va yangilangan ma'lumotlar. Asosiy tushunchalar, misollar va foydali maslahatlar bir joyda.` },
-        { t: `${s}: eng so'nggi yangiliklar`, u: `www.yangiliklar.uz/mavzu/${slug}`, d: `${s} mavzusidagi dolzarb xabarlar, tahlillar va mutaxassislar fikri. Har kuni yangilanib boradi.` },
-        { t: `${s} bo'yicha ko'p so'raladigan savollar`, u: `www.savoljavob.uz/${slug}`, d: `Foydalanuvchilar ${s} haqida eng ko'p beradigan savollar va ularga qisqa, aniq javoblar.` },
-        { t: `${s} — Vikipediya`, u: `uz.wikipedia.org/wiki/${slug}`, d: `Erkin ensiklopediyada ${s} mavzusiga oid umumiy ma'lumot, tarix va havolalar.` }
-      ],
-      img: ['from-blue-500 to-cyan-400', 'from-indigo-500 to-sky-400', 'from-violet-500 to-blue-400', 'from-sky-500 to-emerald-400', 'from-blue-600 to-indigo-400', 'from-cyan-500 to-blue-500'].map((g, i) => ({ g, t: `${s} — rasm ${i + 1}` })),
-      vid: [
-        { t: `${s} nima? 5 daqiqada tushuntirish`, c: 'Bilim Maktabi', v: "128 ming ko'rish", l: '5:12' },
-        { t: `${s} bo'yicha amaliy darslik`, c: 'Darslar TV', v: "54 ming ko'rish", l: '14:37' },
-        { t: `${s}: boshlovchilar uchun maslahatlar`, c: 'Yangi Bilim', v: "23 ming ko'rish", l: '8:45' }
-      ],
-      doc: [
-        { t: `${s} — o'quv qo'llanma`, f: 'PDF', z: '2,4 MB', p: '36 bet' },
-        { t: `${s} bo'yicha ilmiy maqola`, f: 'DOCX', z: '860 KB', p: '12 bet' },
-        { t: `${s} — taqdimot materiallari`, f: 'PPTX', z: '5,1 MB', p: '24 slayd' }
-      ]
-    };
-  }
-
-  const skeleton = `<div class="space-y-4">
-    <div class="flex items-center gap-3 text-brand font-medium"><i data-lucide="loader-2" class="w-5 h-5 spinner"></i> Qidirilmoqda...</div>
-    <div class="skeleton h-28 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div></div>`;
-
-  function doSearch(raw) {
-    const q = (raw || '').trim();
-    if (!q) {
-      section.classList.remove('hidden');
-      meta.textContent = '';
-      results.innerHTML = `<div class="p-6 rounded-2xl border border-amber-300/50 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 text-sm">Iltimos, avval qidiruv so'zini kiriting.</div>`;
-      input.focus(); return;
-    }
-    currentQuery = q;
-    section.classList.remove('hidden');
-    meta.textContent = '';
-    results.innerHTML = skeleton;
-    icons();
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    clearTimeout(timer);
-    timer = setTimeout(async () => {
-      currentData = build(q);
-      try { currentData.up = await searchUploads(q); } catch (e) { currentData.up = []; }
-      render();
-    }, 900);
-  }
-
-  function sectionTitle(icon, text) {
-    return `<h3 class="flex items-center gap-2 font-bold text-lg mb-3"><i data-lucide="${icon}" class="w-5 h-5 text-brand"></i>${text}</h3>`;
-  }
-  function aiBox(d) {
-    return `<div class="fade-up p-5 sm:p-6 rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/10 to-accent/10">
-      <div class="flex items-center gap-2 font-bold text-brand"><i data-lucide="sparkles" class="w-5 h-5"></i> AI Qisqa Javob</div>
-      <p class="mt-3 leading-relaxed text-sm sm:text-base">${esc(d.ai)}</p>
-      <p class="mt-3 text-xs text-slate-500">Bu javob namunaviy (demo) tarzda tuzilgan. Muhim qarorlar uchun rasmiy manbalarni tekshiring.</p></div>`;
-  }
-  function webList(d) {
-    return `<div class="fade-up">${sectionTitle('globe', 'Veb-saytlar')}<div class="space-y-3">` + d.web.map(r => `
-      <a href="#" class="block p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="text-xs text-emerald-600 dark:text-emerald-400">${esc(r.u)}</div>
-        <div class="mt-1 font-semibold text-brand">${esc(r.t)}</div>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">${esc(r.d)}</p></a>`).join('') + `</div></div>`;
-  }
-  function imgGrid(d) {
-    return `<div class="fade-up">${sectionTitle('image', 'Rasmlar')}<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">` + d.img.map(r => `
-      <a href="#" class="group block rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div class="h-28 sm:h-32 bg-gradient-to-br ${r.g} grid place-items-center text-white/90 group-hover:scale-105 transition"><i data-lucide="image" class="w-8 h-8"></i></div>
-        <div class="p-2.5 text-xs font-medium truncate">${esc(r.t)}</div></a>`).join('') + `</div></div>`;
-  }
-  function vidList(d) {
-    return `<div class="fade-up">${sectionTitle('play-circle', 'Videolar')}<div class="grid gap-3 sm:grid-cols-3">` + d.vid.map(r => `
-      <a href="#" class="block rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="relative h-32 bg-gradient-to-br from-slate-800 to-blue-900 grid place-items-center text-white">
-          <i data-lucide="play" class="w-9 h-9"></i>
-          <span class="absolute bottom-2 right-2 text-xs bg-black/70 px-1.5 py-0.5 rounded">${r.l}</span></div>
-        <div class="p-3"><div class="text-sm font-semibold line-clamp-2">${esc(r.t)}</div>
-        <div class="text-xs text-slate-500 mt-1">${r.c} • ${r.v}</div></div></a>`).join('') + `</div></div>`;
-  }
-  function docList(d) {
-    return `<div class="fade-up">${sectionTitle('file-text', 'Hujjatlar')}<div class="space-y-3">` + d.doc.map(r => `
-      <a href="#" class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="w-12 h-12 shrink-0 rounded-xl bg-brand/10 text-brand grid place-items-center text-xs font-extrabold">${r.f}</div>
-        <div class="min-w-0"><div class="font-semibold truncate">${esc(r.t)}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${r.p} • ${r.z}</div></div>
-        <i data-lucide="download" class="w-5 h-5 ml-auto text-slate-400 shrink-0"></i></a>`).join('') + `</div></div>`;
-  }
-
-  function render() {
-    const d = currentData; if (!d) return;
-    const names = { all: 'Barchasi', web: 'Veb-saytlar', img: 'Rasmlar', vid: 'Videolar', doc: 'Hujjatlar', ai: 'AI Javob' };
-    meta.innerHTML = `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar • Bo'lim: ${names[currentCat]}`;
-    let html = '';
-    html = uploadsHTML(d.up || [], currentCat);
-    if (!html) {
-      html = `<div class="fade-up p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-        <div class="w-12 h-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-400"><i data-lucide="search-x" class="w-6 h-6"></i></div>
-        <h3 class="mt-4 font-bold">Hech narsa topilmadi</h3>
-        <p class="mt-1 text-sm text-slate-500">«${esc(currentQuery)}» bo'yicha foydalanuvchilar yuklagan fayllar yo'q. Boshqa so'z bilan urinib ko'ring yoki o'zingiz fayl yuklang.</p>
-        <a href="#yuklash" class="inline-block mt-4 px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Fayl yuklash</a></div>`;
-    }
-    results.innerHTML = html;
-    $$('#results a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
-    icons();
-  }
-
-  /* ===== Fayl yuklash (IndexedDB) ===== */
-  const DB = 'qidiruv-db', ST = 'files', MAX = 50 * 1024 * 1024;
-  function openDB() {
-    return new Promise((res, rej) => {
-      if (!window.indexedDB) return rej(new Error('IndexedDB yo\'q'));
-      const r = indexedDB.open(DB, 1);
-      r.onupgradeneeded = () => r.result.createObjectStore(ST, { keyPath: 'id', autoIncrement: true });
-      r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error);
-    });
-  }
-  async function allFiles() {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const q = db.transaction(ST).objectStore(ST).getAll();
-      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-    });
-  }
-  async function putFile(rec) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).add(rec);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
-  async function delFile(id) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).delete(id);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
-  const typeOf = f => f.type.startsWith('image/') ? 'img' : f.type.startsWith('video/') ? 'vid' : 'doc';
-  const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
-
-  async function searchUploads(q) {
-    const terms = q.toLowerCase().split(/\s+/).filter(t => t.length >= 2);
-    if (!terms.length) return [];
-    return (await allFiles()).filter(r => {
-      const hay = (r.title + ' ' + r.desc + ' ' + r.name).toLowerCase();
-      return terms.some(t => hay.includes(t));
-    });
-  }
-
-  function fileCard(r, withDelete) {
-    const url = URL.createObjectURL(r.blob);
-    const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
-    let preview;
-    if (r.kind === 'img') preview = `<img data-open="${r.id}" src="${url}" alt="${esc(r.title)}" class="w-full h-40 object-cover cursor-pointer">`;
-    else if (r.kind === 'vid') preview = `<video src="${url}" controls preload="metadata" class="w-full h-40 bg-black"></video>`;
-    else preview = `<div class="h-40 grid place-items-center bg-brand/10 text-brand"><i data-lucide="file-text" class="w-10 h-10"></i></div>`;
-    return `<div class="rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-      ${preview}
-      <div class="p-3">
-        <div class="text-sm font-semibold truncate">${esc(r.title)}</div>
-        <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • ${r.views || 0} marta ko'rilgan${r.desc ? ' • ' + esc(r.desc) : ''}</div>
-        <div class="mt-3 flex gap-2">
-          <button data-open="${r.id}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
-          <a data-dl href="${url}" download="${esc(r.name)}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>
-          ${withDelete ? `<button data-del="${r.id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : ''}
-        </div></div></div>`;
-  }
-  function uploadsHTML(items, cat) {
-    const list = cat === 'all' ? items : items.filter(r => r.kind === cat);
-    if (!list.length) return '';
-    return `<div class="fade-up">${sectionTitle('folder-open', 'Yuklangan fayllar')}<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, false)).join('')}</div></div>`;
-  }
-
-  async function renderMine() {
-    let list = [];
-    try { list = await allFiles(); } catch (e) {}
-    $('#myFilesWrap').classList.toggle('hidden', !list.length);
-    $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '';
-    $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
-      await delFile(Number(b.dataset.del)); renderMine(); renderTop(); toast("Fayl o'chirildi!");
-      $('#upStatus').textContent = 'Fayl o\'chirildi.';
-    }));
-    icons();
-  }
-
-  const upFile = $('#upFile'), upStatus = $('#upStatus'), dz = $('#dropZone');
-  upFile.addEventListener('change', () => {
-    $('#upFileName').textContent = upFile.files[0] ? upFile.files[0].name : 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
-  });
-  ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('border-brand'); }));
-  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('border-brand'); }));
-  dz.addEventListener('drop', e => {
-    if (e.dataTransfer.files[0]) { upFile.files = e.dataTransfer.files; upFile.dispatchEvent(new Event('change')); }
-  });
-
-  $('#uploadForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const f = upFile.files[0];
-    if (!f) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
-    if (f.size > MAX) { upStatus.textContent = 'Fayl hajmi 50 MB dan oshmasligi kerak.'; return; }
-    upStatus.textContent = 'Yuklanmoqda...';
+  /* Eski (hisobsiz) ko'rishlar noto'g'ri hisoblangan edi: ularni 0 ga qaytaramiz */
+  async function migrateViews() {
     try {
-      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, at: Date.now() });
-      upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
-      e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
-      renderMine(); renderTop(); toast('Yuklandi!');
-    } catch (err) {
-      toast('Xatolik: fayl yuklanmadi!', true);
-      upStatus.textContent = 'Xatolik: faylni saqlab bo\'lmadi. Brauzer xotirasi cheklangan bo\'lishi mumkin.';
-    }
-  });
-
-  /* ===== Xabar (toast) ===== */
-  let toastTimer = null;
-  function toast(msg, isErr) {
-    const el = $('#toast');
-    el.textContent = (isErr ? '' : '✓ ') + msg;
-    el.style.background = isErr ? '#DC2626' : '#16A34A';
-    el.style.opacity = '1'; el.style.transform = 'translate(-50%, 0)';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%, -150%)'; }, 2800);
+      for (const r of await allFiles()) {
+        if (!Array.isArray(r.viewers)) { r.viewers = []; r.views = 0; await saveFile(r); }
+      }
+    } catch (e) {}
   }
 
-  /* ===== Faylni ochish ===== */
-  async function getFile(id) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const q = db.transaction(ST).objectStore(ST).get(id);
-      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-    });
-  }
-  async function saveFile(rec) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).put(rec);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
-  const viewer = $('#viewer'); let viewerUrl = null;
-  function closeViewer() {
-    viewer.classList.add('hidden'); viewer.classList.remove('flex');
-    $('#vBody').innerHTML = ''; $('#vFoot').innerHTML = '';
-    if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
-  }
-  async function openFile(id) {
-    let r;
-    try { r = await getFile(id); } catch (e) { r = null; }
-    if (!r) { toast('Fayl topilmadi!', true); return; }
-    r.views = (r.views || 0) + 1;
-    try { await saveFile(r); } catch (e) {}
-    if (viewerUrl) URL.revokeObjectURL(viewerUrl);
-    const url = viewerUrl = URL.createObjectURL(r.blob);
-    const t = r.blob.type || '';
-    let body;
-    if (r.kind === 'img') body = `<img src="${url}" alt="${esc(r.title)}" class="max-h-[65vh] mx-auto rounded-lg">`;
-    else if (r.kind === 'vid') body = `<video src="${url}" controls autoplay class="w-full max-h-[65vh] rounded-lg bg-black"></video>`;
-    else if (t === 'application/pdf' || t.startsWith('text/')) body = `<iframe src="${url}" title="${esc(r.title)}" class="w-full h-[65vh] rounded-lg border border-slate-200 dark:border-slate-700 bg-white"></iframe>`;
-    else body = `<div class="py-12 text-center text-slate-500"><div class="w-14 h-14 mx-auto rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="file" class="w-7 h-7"></i></div><p class="mt-4 text-sm">Bu turdagi faylni brauzerda ochib bo'lmaydi. Uni yuklab olib oching.</p></div>`;
-    $('#vTitle').textContent = r.title;
-    $('#vMeta').textContent = `${r.name} • ${fmtSize(r.size)} • ${r.views} marta ko'rilgan` + (r.desc ? ' • ' + r.desc : '');
-    $('#vBody').innerHTML = body;
-    $('#vFoot').innerHTML = `<a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>`;
-    viewer.classList.remove('hidden'); viewer.classList.add('flex');
-    icons(); renderTop(); renderMine();
-  }
-  $('#vClose').addEventListener('click', closeViewer);
-  viewer.addEventListener('click', e => { if (e.target === viewer) closeViewer(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !viewer.classList.contains('hidden')) closeViewer(); });
-  document.addEventListener('click', e => {
-    const o = e.target.closest('[data-open]');
-    if (o) { e.preventDefault(); openFile(Number(o.dataset.open)); return; }
-    if (e.target.closest('[data-dl]')) toast('Yuklab olinmoqda!');
-  });
-
-  /* ===== Top fayllar ===== */
-  async function renderTop() {
-    let list = [];
-    try { list = await allFiles(); } catch (e) {}
-    const box = $('#topList');
-    if (!list.length) {
-      box.innerHTML = `<div class="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500">Hali fayl yuklanmagan. Birinchi bo'lib fayl yuklang!</div>`;
-      return;
-    }
-    list.sort((a, b) => (b.views || 0) - (a.views || 0) || b.at - a.at);
-    const medal = ['bg-amber-400 text-white', 'bg-slate-400 text-white', 'bg-orange-400 text-white'];
-    box.innerHTML = list.slice(0, 10).map((r, i) => {
-      const thumb = r.kind === 'img'
-        ? `<img src="${URL.createObjectURL(r.blob)}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">`
-        : `<div class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-brand/10 text-brand"><i data-lucide="${r.kind === 'vid' ? 'play-circle' : 'file-text'}" class="w-6 h-6"></i></div>`;
-      const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
-      return `<div class="fade-up flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-        <div class="w-8 h-8 shrink-0 rounded-full grid place-items-center text-sm font-extrabold ${medal[i] || 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">${i + 1}</div>
-        ${thumb}
-        <div class="min-w-0 flex-1"><div class="font-semibold truncate">${esc(r.title)}</div>
-          <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • ${r.views || 0} marta ko'rilgan</div></div>
-        <button data-open="${r.id}" class="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button></div>`;
-    }).join('');
-    icons();
-  }
-
-  renderMine();
-  renderTop();
+  refreshAuth();
+  migrateViews().then(() => { renderMine(); renderTop(); });
   icons();
 })();
 </script>
