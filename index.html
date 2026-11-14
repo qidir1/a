@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="author" content="Komuljonov Qutlimurod">
-<meta name="description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling! 1 Qidiruv — bepul, ro'yxatdan o'tishsiz, to'liq o'zbek tilida.">
+<meta name="description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling! 1 Qidiruv — bepul, to'liq o'zbek tilida.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="1 Qidiruv — Barchasi bitta qidiruvda">
 <meta property="og:description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling. Bepul, tez va qulay!">
@@ -51,8 +51,7 @@ tailwind.config = {
     <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600 dark:text-slate-300" aria-label="Asosiy menyu">
       <a href="#bosh" class="hover:text-brand">Bosh sahifa</a>
       <a href="#imkoniyatlar" class="hover:text-brand">Imkoniyatlar</a>
-      <a href="#mashhur" class="hover:text-brand">Mashhur so'rovlar</a>
-      <a href="#top" class="hover:text-brand">Top fayllar</a>
+            <a href="#top" class="hover:text-brand">Top fayllar</a>
       <a href="#yuklash" class="hover:text-brand">Fayl yuklash</a>
       <a href="#aloqa" class="hover:text-brand">Aloqa</a>
     </nav>
@@ -70,8 +69,7 @@ tailwind.config = {
   <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex-col gap-3 text-sm font-medium">
     <a href="#bosh" class="block py-1">Bosh sahifa</a>
     <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
-    <a href="#mashhur" class="block py-1">Mashhur so'rovlar</a>
-    <a href="#yuklash" class="block py-1">Fayl yuklash</a>
+        <a href="#yuklash" class="block py-1">Fayl yuklash</a>
     <a href="#aloqa" class="block py-1">Aloqa</a>
   </div>
 </header>
@@ -87,7 +85,7 @@ tailwind.config = {
     <div class="mt-5 flex flex-wrap justify-center gap-2 text-xs sm:text-sm font-medium">
       <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">⚡ Bir soniyada natija</span>
       <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🆓 Mutlaqo bepul</span>
-      <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🔓 Ro'yxatdan o'tish shart emas</span>
+      <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🔒 Toifalar bo'yicha himoya</span>
     </div>
 
     <form id="searchForm" class="mt-9" role="search" autocomplete="off">
@@ -102,11 +100,13 @@ tailwind.config = {
 
     <div id="tabs" class="mt-6 flex flex-wrap justify-center gap-2" role="tablist" aria-label="Qidiruv turlari">
       <button data-cat="all" class="tab pill-active text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 transition" role="tab">Barchasi</button>
-      <button data-cat="web" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Veb-saytlar</button>
       <button data-cat="img" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Rasmlar</button>
       <button data-cat="vid" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Videolar</button>
       <button data-cat="doc" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Hujjatlar</button>
-      <button data-cat="ai" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">AI Javob</button>
+      </div>
+    <div class="mt-4 flex flex-wrap justify-center gap-2">
+      <select id="fTier" aria-label="Toifa" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Barcha toifalar</option><option>NORMAL</option><option>PREMIUM</option><option>PRIV</option></select>
+      <select id="fSort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Saralash: tartib bo'yicha</option><option value="new">Eng yangilari</option><option value="views">Eng ko'p ko'rilgan</option></select>
     </div>
   </div>
 </section>
@@ -115,20 +115,6 @@ tailwind.config = {
 <section id="natijalar" class="max-w-4xl mx-auto px-4 pb-10 hidden" aria-live="polite">
   <div id="resultMeta" class="text-sm text-slate-500 mb-4"></div>
   <div id="results" class="space-y-6"></div>
-</section>
-
-<!-- TRENDING -->
-<section id="mashhur" class="max-w-4xl mx-auto px-4 py-10 text-center">
-  <h2 class="text-xl sm:text-2xl font-bold">Mashhur so'rovlar</h2>
-  <p class="text-sm text-slate-500 mt-1">Tezkor qidirish uchun mavzulardan birini tanlang</p>
-  <div class="mt-6 flex flex-wrap justify-center gap-3">
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🔥 O'zbekiston yangiliklari</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">💻 IT kurslar</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">💵 Dollar kursi</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">⛅ Ob-havo ma'lumoti</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🎓 Oliy ta'lim kirish</button>
-    <button class="tag px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm hover:border-brand hover:text-brand transition">🍲 Palov retsepti</button>
-  </div>
 </section>
 
 <!-- TOP FILES -->
@@ -194,7 +180,7 @@ tailwind.config = {
     <article class="p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:-translate-y-1 hover:shadow-xl transition">
       <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 grid place-items-center"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
       <h3 class="mt-5 text-lg font-bold">Xavfsiz va maxfiy</h3>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Ro'yxatdan o'tish talab qilinmaydi. Shaxsiy ma'lumotlaringiz so'ralmaydi va qidiruvlaringiz uchinchi shaxslarga berilmaydi.</p>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Fayllar toifalar bo'yicha himoyalangan: faqat ruxsati bor foydalanuvchilar ko'ra oladi. Qidiruvlaringiz uchinchi shaxslarga berilmaydi.</p>
     </article>
   </div>
 </section>
@@ -214,8 +200,7 @@ tailwind.config = {
       <ul class="space-y-2 text-sm text-slate-500">
         <li><a class="hover:text-brand" href="#bosh">Bosh sahifa</a></li>
         <li><a class="hover:text-brand" href="#imkoniyatlar">Imkoniyatlar</a></li>
-        <li><a class="hover:text-brand" href="#mashhur">Mashhur so'rovlar</a></li>
-        <li><a class="hover:text-brand" href="#aloqa">Aloqa</a></li>
+                <li><a class="hover:text-brand" href="#aloqa">Aloqa</a></li>
       </ul>
     </div>
     <div>
@@ -251,6 +236,7 @@ tailwind.config = {
     <div id="pAv" class="mt-4 flex justify-center"></div>
     <div id="pName" class="mt-3 font-bold text-lg"></div><div id="pRole" class="mt-1"></div>
     <label class="mt-4 inline-block cursor-pointer text-sm font-semibold px-4 py-2 rounded-xl border border-brand text-brand hover:bg-brand/10">📷 Rasm yuklash<input id="pFile" type="file" accept="image/*" class="hidden"></label>
+    <form id="pPwForm" class="mt-4 grid gap-2 text-left"><input id="pPw" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="Yangi parol (kamida 6 ta belgi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button class="px-4 py-2.5 rounded-xl border border-brand text-brand text-sm font-semibold hover:bg-brand/10">Parolni o'zgartirish</button></form>
     <div class="mt-4 grid grid-cols-2 gap-2"><button id="pTier" class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Toifani o'zgartirish</button><button id="pOut" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-semibold hover:border-red-500 hover:text-red-500">Chiqish</button></div>
   </div>
 </div>
@@ -412,12 +398,7 @@ tailwind.config = {
   function doSearch(raw) {
     if (!currentUser()) { refreshAuth(); return; }
     const q = (raw || '').trim();
-    if (!q) {
-      section.classList.remove('hidden');
-      meta.textContent = '';
-      results.innerHTML = `<div class="p-6 rounded-2xl border border-amber-300/50 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 text-sm">Iltimos, avval qidiruv so'zini kiriting.</div>`;
-      input.focus(); return;
-    }
+    
     currentQuery = q;
     section.classList.remove('hidden');
     meta.textContent = '';
@@ -472,12 +453,20 @@ tailwind.config = {
         <i data-lucide="download" class="w-5 h-5 ml-auto text-slate-400 shrink-0"></i></a>`).join('') + `</div></div>`;
   }
 
+  function applyFilters(list) {
+    const t = $('#fTier').value, so = $('#fSort').value;
+    let l = t ? list.filter(r => (r.tier || 'NORMAL') === t) : list.slice();
+    if (so === 'new') l.sort((a, b) => (b.at || 0) - (a.at || 0));
+    if (so === 'views') l.sort((a, b) => (b.views || 0) - (a.views || 0));
+    return l;
+  }
+  ['#fTier', '#fSort'].forEach(i => $(i).addEventListener('change', () => { if (currentData) render(); }));
   function render() {
     const d = currentData; if (!d) return;
     const names = { all: 'Barchasi', web: 'Veb-saytlar', img: 'Rasmlar', vid: 'Videolar', doc: 'Hujjatlar', ai: 'AI Javob' };
-    meta.innerHTML = `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar • Bo'lim: ${names[currentCat]}`;
+    meta.innerHTML = `${currentQuery ? `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar` : '<strong>Barcha fayllar</strong>'} • Bo'lim: ${names[currentCat]}`;
     let html = '';
-    html = uploadsHTML(d.up || [], currentCat);
+    html = uploadsHTML(applyFilters(d.up || []), currentCat);
     if (!html) {
       html = `<div class="fade-up p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
         <div class="w-12 h-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-400"><i data-lucide="search-x" class="w-6 h-6"></i></div>
@@ -498,7 +487,7 @@ tailwind.config = {
   async function searchUploads(q) {
     await loadFiles();
     const terms = q.toLowerCase().split(/\s+/).filter(t => t.length >= 2);
-    if (!terms.length) return [];
+    if (!terms.length) return await allItems();
     return (await allItems()).filter(r => {
       const hay = (r.title + ' ' + r.desc + ' ' + r.name).toLowerCase();
       return terms.some(t => hay.includes(t));
@@ -834,6 +823,13 @@ tailwind.config = {
   $('#pClose').addEventListener('click', () => hide('#profileModal'));
   $('#pTier').addEventListener('click', () => { hide('#profileModal'); openTier(); });
   $('#pOut').addEventListener('click', logout);
+  $('#pPwForm').addEventListener('submit', async e => {
+    e.preventDefault(); const pw = $('#pPw').value;
+    if (pw.length < 6) { toast("Parol kamida 6 ta belgidan iborat bo'lsin", true); return; }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) { toast(/different|same/i.test(error.message) ? "Yangi parol eskisidan farq qilsin" : 'Xatolik: ' + error.message, true); return; }
+    $('#pPw').value = ''; toast("Parol o'zgartirildi!");
+  });
   $('#pFile').addEventListener('change', () => {
     const f = $('#pFile').files[0]; if (!f || !f.type.startsWith('image/')) { toast('Rasm tanlang!', true); return; }
     const img = new Image(), url = URL.createObjectURL(f);
