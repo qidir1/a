@@ -23,6 +23,7 @@ tailwind.config = {
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
   html { scroll-behavior: smooth; }
   body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
@@ -289,7 +290,7 @@ tailwind.config = {
       <p id="aErr" class="text-sm text-red-500 min-h-[1.25rem]" aria-live="polite"></p>
       <button id="aSubmit" type="submit" class="py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Kirish</button>
     </form>
-    <p class="mt-3 text-xs text-slate-500">Hisob ma'lumotlari shu qurilma va brauzerda saqlanadi. Har bir fayl hisobingiz uchun faqat bir marta ko'rish sifatida hisoblanadi.</p>
+    <p class="mt-3 text-xs text-slate-500">Hisobingiz serverda saqlanadi — istalgan qurilmadan kirishingiz mumkin. Har bir fayl hisobingiz uchun faqat bir marta ko'rish sifatida hisoblanadi.</p>
   </div>
 </div>
 
@@ -490,41 +491,12 @@ tailwind.config = {
   }
 
   /* ===== Fayl yuklash (IndexedDB) ===== */
-  const DB = 'qidiruv-db', ST = 'files', MAX = 50 * 1024 * 1024;
-  function openDB() {
-    return new Promise((res, rej) => {
-      if (!window.indexedDB) return rej(new Error('IndexedDB yo\'q'));
-      const r = indexedDB.open(DB, 1);
-      r.onupgradeneeded = () => r.result.createObjectStore(ST, { keyPath: 'id', autoIncrement: true });
-      r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error);
-    });
-  }
-  async function allFiles() {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const q = db.transaction(ST).objectStore(ST).getAll();
-      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-    });
-  }
-  async function putFile(rec) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).add(rec);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
-  async function delFile(id) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).delete(id);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
+  const MAX = 50 * 1024 * 1024;
   const typeOf = f => f.type.startsWith('image/') ? 'img' : f.type.startsWith('video/') ? 'vid' : 'doc';
   const fmtSize = b => !b ? '—' : b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
   async function searchUploads(q) {
+    await loadFiles();
     const terms = q.toLowerCase().split(/\s+/).filter(t => t.length >= 2);
     if (!terms.length) return [];
     return (await allItems()).filter(r => {
@@ -534,7 +506,7 @@ tailwind.config = {
   }
 
   function fileCard(r, withDelete) {
-    const url = r.remote ? esc(r.url) : URL.createObjectURL(r.blob);
+    const url = esc(r.url || '');
     const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
     let preview;
     if (r.kind === 'img') preview = `<img data-open="${r.id}" src="${url}" alt="${esc(r.title)}" class="w-full h-40 object-cover cursor-pointer">`;
@@ -561,11 +533,11 @@ tailwind.config = {
 
   async function renderMine() {
     let list = [];
-    try { list = (await allFiles()).filter(r => myRole() === 'ADMIN' || r.owner === currentUser()); } catch (e) {}
+    list = sbFiles.filter(r => isAdmin() || r.owner === currentUser());
     $('#myFilesWrap').classList.toggle('hidden', !list.length);
     $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '';
     $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
-      await delFile(Number(b.dataset.del)); renderMine(); renderTop(); toast("Fayl o'chirildi!");
+      await deleteFile(b.dataset.del); renderMine(); renderTop(); toast("Fayl o'chirildi!");
       $('#upStatus').textContent = 'Fayl o\'chirildi.';
     }));
     icons();
@@ -590,7 +562,7 @@ tailwind.config = {
     if (f.size > MAX) { upStatus.textContent = 'Fayl hajmi 50 MB dan oshmasligi kerak.'; return; }
     upStatus.textContent = 'Yuklanmoqda...';
     try {
-      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, viewers: [], tier: myRole(), vis, owner: currentUser(), ownerName: (getUsers()[currentUser()] || {}).name || '', at: Date.now() });
+      await uploadFile(f, vis);
       upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
       e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
       renderMine(); renderTop(); toast('Yuklandi!');
@@ -612,21 +584,7 @@ tailwind.config = {
   }
 
   /* ===== Faylni ochish ===== */
-  async function getFile(id) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const q = db.transaction(ST).objectStore(ST).get(id);
-      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-    });
-  }
-  async function saveFile(rec) {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).put(rec);
-      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
-    });
-  }
-  const viewer = $('#viewer'); let viewerUrl = null;
+    const viewer = $('#viewer'); let viewerUrl = null;
   function closeViewer() {
     viewer.classList.add('hidden'); viewer.classList.remove('flex');
     $('#vBody').innerHTML = ''; $('#vFoot').innerHTML = '';
@@ -635,29 +593,18 @@ tailwind.config = {
   async function openFile(id) {
     if (!currentUser()) { refreshAuth(); return; }
     const remote = String(id).startsWith('r');
-    let r = null;
-    try { r = remote ? catalog.find(c => c.id === id) : await getFile(Number(id)); } catch (e) { r = null; }
-    if (!r || !canSee(r)) { toast('Fayl topilmadi yoki ruxsat yo\'q!', true); return; }
-    const user = currentUser();
-    if (user) {
-      if (remote) {
-        const v = getViewers(r.key);
-        if (!v.includes(user)) { v.push(user); setViewers(r.key, v); r.views = v.length; }
-      } else {
-        r.viewers = r.viewers || [];
-        if (!r.viewers.includes(user)) {
-          r.viewers.push(user); r.views = (r.views || 0) + 1;
-          try { await saveFile(r); } catch (e) {}
-        }
-      }
-    } else if (!guestHinted) {
-      guestHinted = true;
-      toast("Ko'rishlar hisoblanishi uchun hisobingizga kiring", 'info');
+    let r = (remote ? catalog : sbFiles).find(c => c.id === id);
+    if (!r || !canSee(r)) { toast("Fayl topilmadi yoki ruxsat yo'q!", true); return; }
+    if (remote) {
+      const v = getViewers(r.key), u = currentUser();
+      if (!v.includes(u)) { v.push(u); setViewers(r.key, v); r.views = v.length; }
+    } else {
+      const { error } = await sb.rpc('register_view', { fid: r.sid });
+      if (!error) { await loadFiles(); r = sbFiles.find(c => c.id === id) || r; }
     }
-    if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
-    const rawUrl = remote ? r.url : (viewerUrl = URL.createObjectURL(r.blob));
+    const rawUrl = r.url || '';
     const url = esc(rawUrl);
-    const t = remote ? (/\.pdf$/i.test(r.name) ? 'application/pdf' : /\.txt$/i.test(r.name) ? 'text/plain' : '') : (r.blob.type || '');
+    const t = /\.pdf$/i.test(r.name) ? 'application/pdf' : /\.txt$/i.test(r.name) ? 'text/plain' : '';
     let body;
     if (r.kind === 'img') body = `<img src="${url}" alt="${esc(r.title)}" class="max-h-[65vh] mx-auto rounded-lg">`;
     else if (r.kind === 'vid') body = `<video src="${url}" controls autoplay class="w-full max-h-[65vh] rounded-lg bg-black"></video>`;
@@ -678,7 +625,7 @@ tailwind.config = {
   document.addEventListener('click', e => {
     const o = e.target.closest('[data-open]');
     if (o) { e.preventDefault(); openFile(o.dataset.open); return; }
-    if (e.target.closest('[data-dl]')) toast('Yuklab olinmoqda!');
+    const d = e.target.closest('[data-dl]'); if (d) { e.preventDefault(); downloadTo(d); }
   });
 
   /* ===== Top fayllar ===== */
@@ -693,7 +640,7 @@ tailwind.config = {
     const medal = ['bg-amber-400 text-white', 'bg-slate-400 text-white', 'bg-orange-400 text-white'];
     box.innerHTML = list.slice(0, 10).map((r, i) => {
       const thumb = r.kind === 'img'
-        ? `<img src="${r.remote ? esc(r.url) : URL.createObjectURL(r.blob)}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">`
+        ? `<img src="${esc(r.url || '')}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">`
         : `<div class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-brand/10 text-brand"><i data-lucide="${r.kind === 'vid' ? 'play-circle' : 'file-text'}" class="w-6 h-6"></i></div>`;
       const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
       return `<div class="fade-up flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -707,37 +654,20 @@ tailwind.config = {
     icons();
   }
 
-  /* ===== Hisob tizimi (shu brauzerda) ===== */
-  let guestHinted = false;
-  const LS = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
-    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
-  };
-  const getUsers = () => { try { return JSON.parse(LS.get('acc:users') || '{}') || {}; } catch (e) { return {}; } };
-  const currentUser = () => { const u = LS.get('acc:cur'); return u && getUsers()[u] ? u : null; };
-  async function hashPw(pw, salt) {
-    const data = new TextEncoder().encode(salt + ':' + pw);
-    if (window.crypto && crypto.subtle) {
-      const buf = await crypto.subtle.digest('SHA-256', data);
-      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-    let h = 5381; for (const b of data) h = ((h << 5) + h + b) >>> 0;
-    return 'x' + h.toString(16);
-  }
+  /* ===== Hisob tizimi (Supabase) ===== */
   const authModal = $('#authModal'); let authMode = 'login';
+  const toEmail = n => n.toLowerCase() + '@qidiruv.uz';
   function refreshAuth() {
-    const key = currentUser(), users = getUsers(), chip = $('#userChip');
-    const role = key ? users[key].role || null : null;
-    chip.innerHTML = key ? avatarHTML(users[key], 'w-7 h-7 text-xs') + '<span class="truncate max-w-[90px] hidden sm:inline">' + esc(users[key].name) + '</span>' + badge(role) : '';
-    chip.classList.toggle('hidden', !key); chip.classList.toggle('inline-flex', !!key);
+    const chip = $('#userChip'), role = myRole();
+    chip.innerHTML = me ? avatarHTML(me, 'w-7 h-7 text-xs') + '<span class="truncate max-w-[90px] hidden sm:inline">' + esc(me.username) + '</span>' + badge(role) : '';
+    chip.classList.toggle('hidden', !me); chip.classList.toggle('inline-flex', !!me);
     $('#adminBtn').classList.toggle('hidden', role !== 'ADMIN');
     $('#chatFab').classList.toggle('hidden', !role);
-    if (!role) { $('#chatPanel').classList.add('hidden'); $('#chatPanel').classList.remove('flex'); }
+    if (!role) hide('#chatPanel');
+    $('#authBtn').textContent = me ? 'Chiqish' : 'Kirish';
     renderVis(); chatRender();
-    if (key && !role && $('#tierModal').classList.contains('hidden')) openTier();
-    $('#authBtn').textContent = key ? 'Chiqish' : 'Kirish';
-    if (!key && authModal.classList.contains('hidden')) openAuth(Object.keys(users).length ? 'login' : 'reg');
+    if (!me && authModal.classList.contains('hidden')) openAuth('login');
+    if (me && !role && $('#tierModal').classList.contains('hidden')) openTier();
   }
   function setAuthMode(m) {
     authMode = m;
@@ -747,19 +677,20 @@ tailwind.config = {
     $('#aPass').autocomplete = m === 'login' ? 'current-password' : 'new-password';
     $('#aErr').textContent = '';
   }
-  function openAuth(m) {
-    setAuthMode(m); authModal.classList.remove('hidden'); authModal.classList.add('flex');
-    setTimeout(() => $('#aUser').focus(), 50);
+  function openAuth(m) { setAuthMode(m); show('#authModal'); setTimeout(() => $('#aUser').focus(), 50); }
+  function closeAuth() { if (!me) return; hide('#authModal'); $('#authForm').reset(); $('#aErr').textContent = ''; }
+  async function logout() {
+    await sb.auth.signOut(); me = null; sbFiles = []; msgs = [];
+    if (chan) { sb.removeChannel(chan); chan = null; }
+    hide('#profileModal'); hide('#adminModal'); section.classList.add('hidden');
+    refreshAuth(); renderMine(); renderTop(); toast('Hisobdan chiqdingiz!');
   }
-  function closeAuth() {
-    if (!currentUser()) return;
-    authModal.classList.add('hidden'); authModal.classList.remove('flex');
-    $('#authForm').reset(); $('#aErr').textContent = '';
+  async function afterAuth() {
+    await loadMe(); if (!me) return;
+    await loadFiles(); subscribeChat(); await loadMsgs();
+    refreshAuth(); renderMine(); renderTop();
   }
-  $('#authBtn').addEventListener('click', () => {
-    if (currentUser()) { LS.del('acc:cur'); refreshAuth(); toast('Hisobdan chiqdingiz!'); }
-    else openAuth('login');
-  });
+  $('#authBtn').addEventListener('click', () => { if (me) logout(); else openAuth('login'); });
   $('#aClose').addEventListener('click', closeAuth);
   authModal.addEventListener('click', e => { if (e.target === authModal) closeAuth(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !authModal.classList.contains('hidden')) closeAuth(); });
@@ -767,24 +698,27 @@ tailwind.config = {
   $('#aTabReg').addEventListener('click', () => setAuthMode('reg'));
   $('#authForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const name = $('#aUser').value.trim(), pw = $('#aPass').value, err = $('#aErr');
+    const name = $('#aUser').value.trim(), pw = $('#aPass').value, err = $('#aErr'), btn = $('#aSubmit');
     if (!/^[A-Za-z0-9_]{3,20}$/.test(name)) { err.textContent = "Nom 3–20 ta lotin harfi, raqam yoki _ dan iborat bo'lsin."; return; }
     if (pw.length < 6) { err.textContent = "Parol kamida 6 ta belgidan iborat bo'lsin."; return; }
-    const key = name.toLowerCase(), users = getUsers();
-    if (authMode === 'reg') {
-      if (users[key]) { err.textContent = 'Bu nom band. Boshqa nom tanlang.'; return; }
-      const salt = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
-      users[key] = { name, salt, hash: await hashPw(pw, salt), role: null, avatar: '' };
-      LS.set('acc:users', JSON.stringify(users)); LS.set('acc:cur', key);
-      closeAuth(); refreshAuth(); toast('Hisobingiz yaratildi!');
-    } else {
-      const u = users[key];
-      if (!u || u.hash !== await hashPw(pw, u.salt)) { err.textContent = "Nom yoki parol noto'g'ri."; return; }
-      LS.set('acc:cur', key); closeAuth(); refreshAuth(); toast('Xush kelibsiz, ' + u.name + '!');
-    }
+    btn.disabled = true; err.textContent = '';
+    try {
+      if (authMode === 'reg') {
+        const { data, error } = await sb.auth.signUp({ email: toEmail(name), password: pw, options: { data: { username: name } } });
+        if (error) throw error;
+        if (!data.session) { const r2 = await sb.auth.signInWithPassword({ email: toEmail(name), password: pw }); if (r2.error) { err.textContent = "Hisob yaratildi, lekin email tasdiqlash yoqilgan: autoconfirm.sql ni ishga tushiring."; return; } }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email: toEmail(name), password: pw });
+        if (error) throw error;
+      }
+      await afterAuth(); closeAuth(); toast(authMode === 'reg' ? 'Hisobingiz yaratildi!' : 'Xush kelibsiz, ' + (me ? me.username : name) + '!');
+    } catch (ex) {
+      const m = String(ex.message || ex);
+      err.textContent = /already|registered/i.test(m) ? 'Bu nom band. Boshqa nom tanlang.' : /invalid/i.test(m) ? "Nom yoki parol noto'g'ri." : 'Xatolik: ' + m;
+    } finally { btn.disabled = false; }
   });
 
-  /* ===== Umumiy fayllar (GitHub'dagi fayllar/ papkasi + fayllar.json) ===== */
+    /* ===== Umumiy fayllar (GitHub'dagi fayllar/ papkasi + fayllar.json) ===== */
   let catalog = [], catP = null;
   const extKind = n => /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(n) ? 'img' : /\.(mp4|webm|mov|m4v)$/i.test(n) ? 'vid' : 'doc';
   const getViewers = k => { try { const a = JSON.parse(localStorage.getItem('vw:' + k) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
@@ -804,45 +738,68 @@ tailwind.config = {
       }));
     } catch (e) {}
   })());
-  async function allItems() {
-    await loadCatalog();
-    let l = [];
-    try { l = await allFiles(); } catch (e) {}
-    return l.concat(catalog).filter(canSee);
-  }
+  async function allItems() { await loadCatalog(); return sbFiles.concat(catalog).filter(canSee); }
 
-  /* Eski (hisobsiz) ko'rishlar noto'g'ri hisoblangan edi: ularni 0 ga qaytaramiz */
-  async function migrateViews() {
+  /* ===== Supabase: ma'lumotlar ===== */
+  const sb = window.supabase.createClient('https://rkvpxzzjxpcwnasbozlm.supabase.co', 'sb_publishable_44qiKkyZ47SKOogpHCCujQ_i6bFnZwJ');
+  let me = null, sbFiles = [], msgs = [], chan = null; const profiles = {};
+  const currentUser = () => me ? me.id : null;
+  const myRole = () => me ? me.role || null : null;
+  const isAdmin = () => myRole() === 'ADMIN';
+  async function loadProfiles() { const { data } = await sb.from('profiles').select('*'); (data || []).forEach(p => profiles[p.id] = p); }
+  async function loadMe() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { me = null; return; }
+    await loadProfiles(); me = profiles[session.user.id] || null;
+  }
+  const norm = x => ({ id: 's' + x.id, sid: x.id, path: x.path, key: x.path, title: x.title, desc: x.descr || '', name: x.name || 'fayl', size: x.size || 0, kind: x.kind, views: x.views || 0, owner: x.owner, ownerName: x.owner_name || '', tier: x.tier, vis: x.vis, at: Date.parse(x.created_at), url: '' });
+  async function loadFiles() {
+    if (!me) { sbFiles = []; return; }
+    const { data } = await sb.from('files').select('*').order('created_at', { ascending: false });
+    const rows = (data || []).map(norm);
+    if (rows.length) {
+      const { data: urls } = await sb.storage.from('files').createSignedUrls(rows.map(r => r.path), 3600);
+      const m = {}; (urls || []).forEach(u => { m[u.path] = u.signedUrl; }); rows.forEach(r => { r.url = m[r.path] || ''; });
+    }
+    sbFiles = rows;
+  }
+  async function uploadFile(f, vis) {
+    const path = me.id + '/' + Date.now() + '-' + f.name.replace(/[^\w.\-]+/g, '_');
+    let r = await sb.storage.from('files').upload(path, f, { contentType: f.type || 'application/octet-stream' });
+    if (r.error) throw r.error;
+    r = await sb.from('files').insert({ owner: me.id, owner_name: me.username, title: $('#upTitle').value.trim(), descr: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), path, tier: me.role, vis });
+    if (r.error) { await sb.storage.from('files').remove([path]); throw r.error; }
+    await loadFiles();
+  }
+  async function deleteFile(id) {
+    const r = sbFiles.find(c => c.id === id); if (!r) return;
+    await sb.storage.from('files').remove([r.path]); await sb.from('files').delete().eq('id', r.sid); await loadFiles();
+  }
+  async function downloadTo(a) {
     try {
-      for (const r of await allFiles()) {
-        if (!Array.isArray(r.viewers)) { r.viewers = []; r.views = 0; await saveFile(r); }
-      }
-    } catch (e) {}
+      toast('Yuklab olinmoqda!');
+      const b = await (await fetch(a.href)).blob(), u = URL.createObjectURL(b), l = document.createElement('a');
+      l.href = u; l.download = a.getAttribute('download') || 'fayl'; document.body.appendChild(l); l.click(); l.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 4000);
+    } catch (e) { window.open(a.href, '_blank'); }
   }
 
-
-  /* ===== Toifalar, profil, boshqaruv paneli, chat ===== */
+  /* ===== Toifalar, profil, boshqaruv paneli ===== */
   const ROLES = ['NORMAL', 'PREMIUM', 'PRIV', 'ADMIN'];
-  const CODES = { PREMIUM: 'QWER', PRIV: 'DJUM', ADMIN: 'RENBEKK' };
   const MATRIX = { NORMAL: ['NORMAL', 'PREMIUM'], PREMIUM: ['PREMIUM'], PRIV: ['PRIV'], ADMIN: ['NORMAL', 'PREMIUM', 'PRIV'] };
   const BADGE = { NORMAL: 'bg-slate-500/15 text-slate-500', PREMIUM: 'bg-amber-500/15 text-amber-500', PRIV: 'bg-violet-500/15 text-violet-500', ADMIN: 'bg-red-500/15 text-red-500' };
   const badge = r => r ? `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded ${BADGE[r]}">${r}</span>` : '';
-  const saveUsers = u => LS.set('acc:users', JSON.stringify(u));
-  const myRole = () => { const k = currentUser(); return k ? getUsers()[k].role || null : null; };
-  const isAdmin = () => myRole() === 'ADMIN';
   const show = id => { const m = $(id); m.classList.remove('hidden'); m.classList.add('flex'); };
   const hide = id => { const m = $(id); m.classList.add('hidden'); m.classList.remove('flex'); };
   const avatarHTML = (u, cls) => u && u.avatar
     ? `<img src="${u.avatar}" class="${cls} rounded-full object-cover shrink-0" alt="">`
-    : `<span class="${cls} rounded-full bg-brand text-white grid place-items-center font-bold shrink-0">${esc(((u && u.name) || '?')[0].toUpperCase())}</span>`;
-
-  /* Fayl ko'rish huquqi: yuklovchi toifasi + yuklovchi tanlagan toifalar */
+    : `<span class="${cls} rounded-full bg-brand text-white grid place-items-center font-bold shrink-0">${esc(((u && u.username) || '?')[0].toUpperCase())}</span>`;
   function canSee(r) {
-    const me = myRole(); if (!me) return false;
-    if (me === 'ADMIN') return true;
+    const me_ = myRole(); if (!me_) return false;
+    if (me_ === 'ADMIN') return true;
     if (r.owner && r.owner === currentUser()) return true;
-    if (!(MATRIX[r.tier || 'NORMAL'] || []).includes(me)) return false;
-    return !r.vis || r.vis.includes(me);
+    if (!(MATRIX[r.tier || 'NORMAL'] || []).includes(me_)) return false;
+    return !r.vis || r.vis.includes(me_);
   }
   function renderVis() {
     const r = myRole();
@@ -850,16 +807,14 @@ tailwind.config = {
   }
   const getVis = () => $$('#upVis input:checked').map(i => i.value);
 
-  /* Toifa tanlash */
   let pickRole = null;
-  function openTier() {
-    pickRole = null; $('#tForm').classList.add('hidden'); $('#tErr').textContent = '';
-    $('#tClose').classList.toggle('hidden', !myRole()); show('#tierModal');
-  }
-  function setRole(r) {
-    const k = currentUser(), u = getUsers(); u[k].role = r; saveUsers(u);
-    hide('#tierModal'); refreshAuth(); renderMine(); renderTop(); if (currentData) render();
-    toast('Toifangiz: ' + r);
+  function openTier() { pickRole = null; $('#tForm').classList.add('hidden'); $('#tErr').textContent = ''; $('#tClose').classList.toggle('hidden', !myRole()); show('#tierModal'); }
+  async function setRole(r, code) {
+    const { error } = await sb.rpc('set_my_role', { p_role: r, p_code: code || '' });
+    if (error) { $('#tErr').textContent = "Kod noto'g'ri."; toast('Toifa berilmadi', true); return; }
+    await loadProfiles(); me = profiles[me.id]; hide('#tierModal');
+    await loadFiles(); subscribeChat(); await loadMsgs();
+    refreshAuth(); renderMine(); renderTop(); if (currentData) render(); toast('Toifangiz: ' + r);
   }
   $$('[data-tier]').forEach(b => b.addEventListener('click', () => {
     const r = b.dataset.tier;
@@ -867,74 +822,88 @@ tailwind.config = {
     pickRole = r; $('#tForm').classList.remove('hidden');
     $('#tCodeLbl').textContent = r + ' toifasi uchun kodni kiriting'; $('#tCode').value = ''; $('#tErr').textContent = ''; $('#tCode').focus();
   }));
-  $('#tForm').addEventListener('submit', e => {
-    e.preventDefault();
-    if (pickRole && $('#tCode').value.trim().toUpperCase() === CODES[pickRole]) setRole(pickRole);
-    else $('#tErr').textContent = "Kod noto'g'ri.";
-  });
+  $('#tForm').addEventListener('submit', e => { e.preventDefault(); if (pickRole) setRole(pickRole, $('#tCode').value.trim()); });
   $('#tClose').addEventListener('click', () => hide('#tierModal'));
 
-  /* Profil */
   function openProfile() {
-    const k = currentUser(); if (!k) return; const u = getUsers()[k];
-    $('#pAv').innerHTML = avatarHTML(u, 'w-24 h-24 text-3xl'); $('#pName').textContent = u.name; $('#pRole').innerHTML = badge(u.role);
+    if (!me) return;
+    $('#pAv').innerHTML = avatarHTML(me, 'w-24 h-24 text-3xl'); $('#pName').textContent = me.username; $('#pRole').innerHTML = badge(me.role);
     show('#profileModal');
   }
   $('#userChip').addEventListener('click', openProfile);
   $('#pClose').addEventListener('click', () => hide('#profileModal'));
   $('#pTier').addEventListener('click', () => { hide('#profileModal'); openTier(); });
-  $('#pOut').addEventListener('click', () => { hide('#profileModal'); LS.del('acc:cur'); refreshAuth(); toast('Hisobdan chiqdingiz!'); });
+  $('#pOut').addEventListener('click', logout);
   $('#pFile').addEventListener('change', () => {
     const f = $('#pFile').files[0]; if (!f || !f.type.startsWith('image/')) { toast('Rasm tanlang!', true); return; }
     const img = new Image(), url = URL.createObjectURL(f);
-    img.onload = () => {
+    img.onload = async () => {
       const c = document.createElement('canvas'); c.width = c.height = 256;
       const sz = Math.min(img.width, img.height);
       c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 256, 256);
       URL.revokeObjectURL(url);
-      const us = getUsers(), k = currentUser(); us[k].avatar = c.toDataURL('image/jpeg', .85); saveUsers(us);
-      openProfile(); refreshAuth(); toast('Profil rasmi yangilandi!');
+      const { error } = await sb.from('profiles').update({ avatar: c.toDataURL('image/jpeg', .85) }).eq('id', me.id);
+      if (error) { toast('Rasm saqlanmadi', true); return; }
+      await loadProfiles(); me = profiles[me.id]; openProfile(); refreshAuth(); toast('Profil rasmi yangilandi!');
     };
     img.onerror = () => toast("Rasmni o'qib bo'lmadi", true);
     img.src = url; $('#pFile').value = '';
   });
 
-  /* Boshqaruv paneli (faqat ADMIN) */
   const rowCls = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm';
   async function adminRender() {
     if (!isAdmin()) return;
-    const us = getUsers(), me = currentUser(), files = await allFiles();
-    $('#adStats').textContent = `Foydalanuvchilar: ${Object.keys(us).length} • Fayllar: ${files.length} • Xabarlar: ${getMsgs().length}`;
-    $('#adUsers').innerHTML = Object.keys(us).map(k => {
-      const u = us[k];
-      return `<div class="${rowCls}">${avatarHTML(u, 'w-8 h-8 text-xs')}<span class="font-semibold truncate flex-1">${esc(u.name)}</span>
-        <select data-ar="${k}" ${k === me ? 'disabled' : ''} class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${['', ...ROLES].map(r => `<option value="${r}" ${(u.role || '') === r ? 'selected' : ''}>${r || '— toifasiz —'}</option>`).join('')}</select>
-        ${k === me ? '' : `<button data-au="${k}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>`}</div>`;
+    await loadProfiles(); await loadFiles();
+    const ids = Object.keys(profiles);
+    $('#adStats').textContent = `Foydalanuvchilar: ${ids.length} • Fayllar: ${sbFiles.length} • Xabarlar: ${msgs.length}`;
+    $('#adUsers').innerHTML = ids.map(k => {
+      const u = profiles[k];
+      return `<div class="${rowCls}">${avatarHTML(u, 'w-8 h-8 text-xs')}<span class="font-semibold truncate flex-1">${esc(u.username)}</span>
+        <select data-ar="${k}" ${k === me.id ? 'disabled' : ''} class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${['', ...ROLES].map(r => `<option value="${r}" ${(u.role || '') === r ? 'selected' : ''}>${r || '— toifasiz —'}</option>`).join('')}</select>
+        ${k === me.id ? '' : `<button data-au="${k}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>`}</div>`;
     }).join('');
-    $('#adFiles').innerHTML = files.length ? files.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName || '')} • ${r.tier || 'NORMAL'} → ${(r.vis || ['hamma']).join(', ')}</span></span><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
+    $('#adFiles').innerHTML = sbFiles.length ? sbFiles.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName)} • ${r.tier} → ${(r.vis || []).join(', ')}</span></span><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
   }
   $('#adminBtn').addEventListener('click', () => { if (isAdmin()) { show('#adminModal'); adminRender(); } });
   $('#adClose').addEventListener('click', () => hide('#adminModal'));
-  $('#adminModal').addEventListener('change', e => {
+  $('#adminModal').addEventListener('change', async e => {
     const k = e.target.dataset.ar; if (!k || !isAdmin()) return;
-    const us = getUsers(); if (us[k]) { us[k].role = e.target.value || null; saveUsers(us); toast('Toifa yangilandi'); adminRender(); chatRender(); }
+    const { error } = await sb.rpc('admin_set_role', { uid: k, p_role: e.target.value });
+    toast(error ? 'Xatolik: ' + error.message : 'Toifa yangilandi', !!error); adminRender(); chatRender();
   });
   $('#adminModal').addEventListener('click', async e => {
     if (!isAdmin()) return;
     const au = e.target.dataset.au, af = e.target.dataset.af;
-    if (au && confirm("Foydalanuvchi o'chirilsinmi?")) { const us = getUsers(); delete us[au]; saveUsers(us); adminRender(); chatRender(); }
-    if (af && confirm("Fayl o'chirilsinmi?")) { await delFile(Number(af)); adminRender(); renderMine(); renderTop(); }
+    if (au && confirm("Foydalanuvchi o'chirilsinmi?")) { const { error } = await sb.rpc('admin_delete_user', { uid: au }); if (error) toast(error.message, true); delete profiles[au]; adminRender(); }
+    if (af && confirm("Fayl o'chirilsinmi?")) { await deleteFile(af); adminRender(); renderMine(); renderTop(); }
   });
-  $('#adClearChat').addEventListener('click', () => { if (isAdmin() && confirm('Chat tozalansinmi?')) { LS.set('chat:msgs', '[]'); chatRender(); adminRender(); } });
+  $('#adClearChat').addEventListener('click', async () => {
+    if (isAdmin() && confirm('Chat tozalansinmi?')) { await sb.from('messages').delete().gte('id', 0); msgs = []; chatRender(); adminRender(); }
+  });
 
-  /* Chat (bir brauzerdagi hisoblar orasida, oynalar bir-biri bilan sinxron) */
-  const getMsgs = () => { try { return JSON.parse(LS.get('chat:msgs') || '[]') || []; } catch (e) { return []; } };
+  /* ===== Chat (real vaqtda) ===== */
+  async function loadMsgs() {
+    if (!myRole()) { msgs = []; chatRender(); return; }
+    const { data } = await sb.from('messages').select('*').order('id', { ascending: false }).limit(100);
+    msgs = (data || []).reverse(); chatRender();
+  }
+  function subscribeChat() {
+    if (chan || !myRole()) return;
+    chan = sb.channel('chat')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async p => {
+        if (!profiles[p.new.user_id]) await loadProfiles();
+        if (!msgs.some(x => x.id === p.new.id)) { msgs.push(p.new); msgs = msgs.slice(-100); }
+        chatRender();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, p => { msgs = msgs.filter(x => x.id !== p.old.id); chatRender(); })
+      .subscribe();
+  }
   function chatRender() {
-    const box = $('#chatBox'), us = getUsers(), me = currentUser(), adm = isAdmin(), m = getMsgs();
-    box.innerHTML = m.length ? m.map(x => {
-      const u = us[x.u] || { name: x.name, role: x.role }, mine = x.u === me;
+    const box = $('#chatBox'), adm = isAdmin();
+    box.innerHTML = msgs.length ? msgs.map(x => {
+      const u = profiles[x.user_id] || { username: x.username }, mine = me && x.user_id === me.id;
       return `<div class="flex gap-2 ${mine ? 'flex-row-reverse' : ''}">${avatarHTML(u, 'w-7 h-7 text-[10px]')}<div class="max-w-[75%] ${mine ? 'text-right' : ''}">
-        <div class="text-[11px] text-slate-500">${esc(u.name || '?')} ${badge(u.role)} • ${new Date(x.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${adm ? ` <button data-cd="${x.id}" class="text-red-500 font-bold">×</button>` : ''}</div>
+        <div class="text-[11px] text-slate-500">${esc(u.username || '?')} ${badge(u.role)} • ${new Date(x.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${adm ? ` <button data-cd="${x.id}" class="text-red-500 font-bold">×</button>` : ''}</div>
         <div class="inline-block mt-0.5 px-3 py-2 rounded-2xl text-sm text-left break-words ${mine ? 'bg-brand text-white' : 'bg-slate-100 dark:bg-slate-800'}">${esc(x.txt)}</div></div></div>`;
     }).join('') : '<p class="text-sm text-slate-500 text-center mt-6">Hali xabar yo\'q. Birinchi bo\'lib yozing!</p>';
     box.scrollTop = box.scrollHeight;
@@ -942,22 +911,25 @@ tailwind.config = {
   $('#chatFab').addEventListener('click', () => {
     const p = $('#chatPanel'); p.classList.toggle('hidden'); p.classList.toggle('flex'); chatRender(); $('#chatIn').focus();
   });
-  $('#chatForm').addEventListener('submit', e => {
+  $('#chatForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const k = currentUser(), txt = $('#chatIn').value.trim(); if (!k || !myRole() || !txt) return;
-    const u = getUsers()[k], m = getMsgs();
-    m.push({ id: Date.now() + '' + Math.floor(Math.random() * 1000), u: k, name: u.name, role: u.role, t: Date.now(), txt });
-    LS.set('chat:msgs', JSON.stringify(m.slice(-200))); $('#chatIn').value = ''; chatRender();
+    const txt = $('#chatIn').value.trim(); if (!me || !myRole() || !txt) return;
+    $('#chatIn').value = '';
+    const { data, error } = await sb.from('messages').insert({ user_id: me.id, username: me.username, txt }).select().single();
+    if (error) { toast('Xabar yuborilmadi', true); return; }
+    if (!msgs.some(x => x.id === data.id)) msgs.push(data);
+    chatRender();
   });
-  $('#chatBox').addEventListener('click', e => {
-    const id = e.target.dataset.cd; if (!id || !isAdmin()) return;
-    LS.set('chat:msgs', JSON.stringify(getMsgs().filter(x => x.id !== id))); chatRender();
+  $('#chatBox').addEventListener('click', async e => {
+    const id = Number(e.target.dataset.cd); if (!id || !isAdmin()) return;
+    await sb.from('messages').delete().eq('id', id); msgs = msgs.filter(x => x.id !== id); chatRender();
   });
-  window.addEventListener('storage', e => { if (e.key === 'chat:msgs') chatRender(); if (e.key === 'acc:users') refreshAuth(); });
 
-  refreshAuth();
-  migrateViews().then(() => { renderMine(); renderTop(); });
-  icons();
+  /* ===== Ishga tushirish ===== */
+  (async () => {
+    try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); await loadMsgs(); } } catch (e) { console.error(e); }
+    refreshAuth(); renderMine(); renderTop(); icons();
+  })();
 })();
 </script>
 </body>
