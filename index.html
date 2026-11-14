@@ -56,7 +56,8 @@ tailwind.config = {
       <a href="#aloqa" class="hover:text-brand">Aloqa</a>
     </nav>
     <div class="flex items-center gap-2">
-      <span id="userChip" class="hidden items-center text-sm font-semibold px-3 py-2 rounded-xl bg-brand/10 text-brand max-w-[160px] truncate"></span>
+      <button id="adminBtn" class="hidden text-sm font-semibold px-3 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20">🛠 Panel</button>
+      <button id="userChip" title="Profil" class="hidden items-center gap-2 text-sm font-semibold px-2 py-1.5 rounded-xl bg-brand/10 text-brand"></button>
       <button id="authBtn" class="text-sm font-semibold px-4 py-2 rounded-xl bg-brand text-white hover:bg-blue-700 transition">Kirish</button>
       <button id="themeBtn" title="Tungi / Kunduzgi rejim" aria-label="Tungi / Kunduzgi rejim" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
         <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
@@ -154,6 +155,7 @@ tailwind.config = {
     <form id="uploadForm" class="mt-6 grid gap-3">
       <input id="upTitle" type="text" maxlength="100" required placeholder="Fayl nomi (masalan: Toshkent manzarasi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       <input id="upDesc" type="text" maxlength="200" placeholder="Diqqatni tortadigan tavsif yozing (masalan: Toshkentning eng go'zal kechqurun manzarasi!)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <div class="px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><div class="text-sm font-semibold mb-2">Kimlar ko'ra oladi?</div><div id="upVis" class="flex flex-wrap gap-4"></div></div>
       <label id="dropZone" class="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
         <i data-lucide="file-up" class="w-8 h-8 text-slate-400"></i>
         <span id="upFileName" class="text-sm text-slate-500">Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko'pi 50 MB)</span>
@@ -228,6 +230,46 @@ tailwind.config = {
     </div>
   </div>
 </footer>
+
+<div id="tierModal" class="hidden fixed inset-0 z-[66] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md">
+    <div class="flex items-start justify-between gap-3"><div><h2 class="text-lg font-bold">Toifangizni tanlang</h2><p class="text-xs text-slate-500 mt-0.5">Toifa qaysi fayllarni ko'rishingizni belgilaydi</p></div><button id="tClose" type="button" class="hidden w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <div class="mt-4 grid gap-2">
+      <button data-tier="NORMAL" class="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand"><b>NORMAL</b> <span class="text-xs text-slate-500">— kodsiz, bepul</span></button>
+      <button data-tier="PREMIUM" class="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500"><b>PREMIUM</b> <span class="text-xs text-slate-500">— kod kerak</span></button>
+      <button data-tier="PRIV" class="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-violet-500"><b>PRIV</b> <span class="text-xs text-slate-500">— kod kerak</span></button>
+      <button data-tier="ADMIN" class="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-red-500"><b>ADMIN</b> <span class="text-xs text-slate-500">— kod kerak</span></button>
+    </div>
+    <form id="tForm" class="hidden mt-4 grid gap-2"><label id="tCodeLbl" class="text-sm font-semibold"></label><input id="tCode" type="password" autocomplete="off" placeholder="Kod" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><p id="tErr" class="text-sm text-red-500 min-h-[1.25rem]"></p><button class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Tasdiqlash</button></form>
+  </div>
+</div>
+
+<div id="profileModal" class="hidden fixed inset-0 z-[64] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-sm text-center">
+    <div class="flex justify-between items-center"><h2 class="text-lg font-bold">Profil</h2><button id="pClose" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <div id="pAv" class="mt-4 flex justify-center"></div>
+    <div id="pName" class="mt-3 font-bold text-lg"></div><div id="pRole" class="mt-1"></div>
+    <label class="mt-4 inline-block cursor-pointer text-sm font-semibold px-4 py-2 rounded-xl border border-brand text-brand hover:bg-brand/10">📷 Rasm yuklash<input id="pFile" type="file" accept="image/*" class="hidden"></label>
+    <div class="mt-4 grid grid-cols-2 gap-2"><button id="pTier" class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Toifani o'zgartirish</button><button id="pOut" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-semibold hover:border-red-500 hover:text-red-500">Chiqish</button></div>
+  </div>
+</div>
+
+<div id="adminModal" class="hidden fixed inset-0 z-[64] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-2xl max-h-[90vh] overflow-auto">
+    <div class="flex justify-between items-center"><h2 class="text-lg font-bold">🛠 Boshqaruv paneli</h2><button id="adClose" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <p id="adStats" class="text-sm text-slate-500 mt-1"></p>
+    <h3 class="font-bold mt-4 mb-2">Foydalanuvchilar</h3><div id="adUsers" class="space-y-2"></div>
+    <h3 class="font-bold mt-5 mb-2">Fayllar</h3><div id="adFiles" class="space-y-2"></div>
+    <h3 class="font-bold mt-5 mb-2">Chat</h3><button id="adClearChat" class="px-4 py-2 rounded-xl border border-red-500 text-red-500 text-sm font-semibold hover:bg-red-500/10">Butun chatni tozalash</button>
+  </div>
+</div>
+
+<button id="chatFab" class="hidden fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-brand text-white shadow-xl grid place-items-center text-2xl hover:bg-blue-700" aria-label="Chat">💬</button>
+<div id="chatPanel" class="hidden fixed bottom-24 right-5 z-50 w-[calc(100vw-2.5rem)] max-w-sm h-[28rem] max-h-[70vh] flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+  <div class="px-4 py-3 font-bold border-b border-slate-200 dark:border-slate-800">💬 Umumiy chat</div>
+  <div id="chatBox" class="flex-1 overflow-auto p-3 space-y-3"></div>
+  <form id="chatForm" class="p-2 border-t border-slate-200 dark:border-slate-800 flex gap-2"><input id="chatIn" maxlength="300" autocomplete="off" placeholder="Xabar yozing..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">➤</button></form>
+</div>
 
 <div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 z-[70] px-5 py-3 rounded-xl text-white text-sm font-semibold shadow-xl pointer-events-none" style="opacity:0;transform:translate(-50%,-150%);transition:all .35s ease"></div>
 
@@ -519,7 +561,7 @@ tailwind.config = {
 
   async function renderMine() {
     let list = [];
-    try { list = await allFiles(); } catch (e) {}
+    try { list = (await allFiles()).filter(r => myRole() === 'ADMIN' || r.owner === currentUser()); } catch (e) {}
     $('#myFilesWrap').classList.toggle('hidden', !list.length);
     $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '';
     $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
@@ -544,10 +586,11 @@ tailwind.config = {
     if (!currentUser()) { refreshAuth(); return; }
     const f = upFile.files[0];
     if (!f) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
+    const vis = getVis(); if (!vis.length) { upStatus.textContent = 'Kamida bitta toifani tanlang.'; return; }
     if (f.size > MAX) { upStatus.textContent = 'Fayl hajmi 50 MB dan oshmasligi kerak.'; return; }
     upStatus.textContent = 'Yuklanmoqda...';
     try {
-      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, viewers: [], owner: currentUser(), ownerName: (getUsers()[currentUser()] || {}).name || '', at: Date.now() });
+      await putFile({ title: $('#upTitle').value.trim(), desc: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), blob: f, views: 0, viewers: [], tier: myRole(), vis, owner: currentUser(), ownerName: (getUsers()[currentUser()] || {}).name || '', at: Date.now() });
       upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
       e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
       renderMine(); renderTop(); toast('Yuklandi!');
@@ -594,7 +637,7 @@ tailwind.config = {
     const remote = String(id).startsWith('r');
     let r = null;
     try { r = remote ? catalog.find(c => c.id === id) : await getFile(Number(id)); } catch (e) { r = null; }
-    if (!r) { toast('Fayl topilmadi!', true); return; }
+    if (!r || !canSee(r)) { toast('Fayl topilmadi yoki ruxsat yo\'q!', true); return; }
     const user = currentUser();
     if (user) {
       if (remote) {
@@ -685,8 +728,14 @@ tailwind.config = {
   const authModal = $('#authModal'); let authMode = 'login';
   function refreshAuth() {
     const key = currentUser(), users = getUsers(), chip = $('#userChip');
-    chip.textContent = key ? '👤 ' + users[key].name : '';
-    chip.classList.toggle('sm:inline-flex', !!key);
+    const role = key ? users[key].role || null : null;
+    chip.innerHTML = key ? avatarHTML(users[key], 'w-7 h-7 text-xs') + '<span class="truncate max-w-[90px] hidden sm:inline">' + esc(users[key].name) + '</span>' + badge(role) : '';
+    chip.classList.toggle('hidden', !key); chip.classList.toggle('inline-flex', !!key);
+    $('#adminBtn').classList.toggle('hidden', role !== 'ADMIN');
+    $('#chatFab').classList.toggle('hidden', !role);
+    if (!role) { $('#chatPanel').classList.add('hidden'); $('#chatPanel').classList.remove('flex'); }
+    renderVis(); chatRender();
+    if (key && !role && $('#tierModal').classList.contains('hidden')) openTier();
     $('#authBtn').textContent = key ? 'Chiqish' : 'Kirish';
     if (!key && authModal.classList.contains('hidden')) openAuth(Object.keys(users).length ? 'login' : 'reg');
   }
@@ -725,7 +774,7 @@ tailwind.config = {
     if (authMode === 'reg') {
       if (users[key]) { err.textContent = 'Bu nom band. Boshqa nom tanlang.'; return; }
       const salt = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
-      users[key] = { name, salt, hash: await hashPw(pw, salt) };
+      users[key] = { name, salt, hash: await hashPw(pw, salt), role: null, avatar: '' };
       LS.set('acc:users', JSON.stringify(users)); LS.set('acc:cur', key);
       closeAuth(); refreshAuth(); toast('Hisobingiz yaratildi!');
     } else {
@@ -751,7 +800,7 @@ tailwind.config = {
         id: 'r' + i, remote: true, key: String(x.file), title: String(x.title), desc: String(x.desc || ''),
         name: String(x.file).split('/').pop(), url: encodeURI(String(x.file)),
         kind: ['img', 'vid', 'doc'].includes(x.type) ? x.type : extKind(String(x.file)),
-        size: Number(x.size) || 0, views: getRemoteViews(String(x.file)), ownerName: String(x.by || ''), at: 0
+        size: Number(x.size) || 0, views: getRemoteViews(String(x.file)), ownerName: String(x.by || ''), at: 0, tier: 'ADMIN', vis: Array.isArray(x.vis) ? x.vis : null
       }));
     } catch (e) {}
   })());
@@ -759,7 +808,7 @@ tailwind.config = {
     await loadCatalog();
     let l = [];
     try { l = await allFiles(); } catch (e) {}
-    return l.concat(catalog);
+    return l.concat(catalog).filter(canSee);
   }
 
   /* Eski (hisobsiz) ko'rishlar noto'g'ri hisoblangan edi: ularni 0 ga qaytaramiz */
@@ -770,6 +819,141 @@ tailwind.config = {
       }
     } catch (e) {}
   }
+
+
+  /* ===== Toifalar, profil, boshqaruv paneli, chat ===== */
+  const ROLES = ['NORMAL', 'PREMIUM', 'PRIV', 'ADMIN'];
+  const CODES = { PREMIUM: 'QWER', PRIV: 'DJUM', ADMIN: 'RENBEKK' };
+  const MATRIX = { NORMAL: ['NORMAL', 'PREMIUM'], PREMIUM: ['PREMIUM'], PRIV: ['PRIV'], ADMIN: ['NORMAL', 'PREMIUM', 'PRIV'] };
+  const BADGE = { NORMAL: 'bg-slate-500/15 text-slate-500', PREMIUM: 'bg-amber-500/15 text-amber-500', PRIV: 'bg-violet-500/15 text-violet-500', ADMIN: 'bg-red-500/15 text-red-500' };
+  const badge = r => r ? `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded ${BADGE[r]}">${r}</span>` : '';
+  const saveUsers = u => LS.set('acc:users', JSON.stringify(u));
+  const myRole = () => { const k = currentUser(); return k ? getUsers()[k].role || null : null; };
+  const isAdmin = () => myRole() === 'ADMIN';
+  const show = id => { const m = $(id); m.classList.remove('hidden'); m.classList.add('flex'); };
+  const hide = id => { const m = $(id); m.classList.add('hidden'); m.classList.remove('flex'); };
+  const avatarHTML = (u, cls) => u && u.avatar
+    ? `<img src="${u.avatar}" class="${cls} rounded-full object-cover shrink-0" alt="">`
+    : `<span class="${cls} rounded-full bg-brand text-white grid place-items-center font-bold shrink-0">${esc(((u && u.name) || '?')[0].toUpperCase())}</span>`;
+
+  /* Fayl ko'rish huquqi: yuklovchi toifasi + yuklovchi tanlagan toifalar */
+  function canSee(r) {
+    const me = myRole(); if (!me) return false;
+    if (me === 'ADMIN') return true;
+    if (r.owner && r.owner === currentUser()) return true;
+    if (!(MATRIX[r.tier || 'NORMAL'] || []).includes(me)) return false;
+    return !r.vis || r.vis.includes(me);
+  }
+  function renderVis() {
+    const r = myRole();
+    $('#upVis').innerHTML = (r ? MATRIX[r] : []).map(t => `<label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" value="${t}" checked class="accent-blue-600"> ${t}</label>`).join('');
+  }
+  const getVis = () => $$('#upVis input:checked').map(i => i.value);
+
+  /* Toifa tanlash */
+  let pickRole = null;
+  function openTier() {
+    pickRole = null; $('#tForm').classList.add('hidden'); $('#tErr').textContent = '';
+    $('#tClose').classList.toggle('hidden', !myRole()); show('#tierModal');
+  }
+  function setRole(r) {
+    const k = currentUser(), u = getUsers(); u[k].role = r; saveUsers(u);
+    hide('#tierModal'); refreshAuth(); renderMine(); renderTop(); if (currentData) render();
+    toast('Toifangiz: ' + r);
+  }
+  $$('[data-tier]').forEach(b => b.addEventListener('click', () => {
+    const r = b.dataset.tier;
+    if (r === 'NORMAL') { setRole(r); return; }
+    pickRole = r; $('#tForm').classList.remove('hidden');
+    $('#tCodeLbl').textContent = r + ' toifasi uchun kodni kiriting'; $('#tCode').value = ''; $('#tErr').textContent = ''; $('#tCode').focus();
+  }));
+  $('#tForm').addEventListener('submit', e => {
+    e.preventDefault();
+    if (pickRole && $('#tCode').value.trim().toUpperCase() === CODES[pickRole]) setRole(pickRole);
+    else $('#tErr').textContent = "Kod noto'g'ri.";
+  });
+  $('#tClose').addEventListener('click', () => hide('#tierModal'));
+
+  /* Profil */
+  function openProfile() {
+    const k = currentUser(); if (!k) return; const u = getUsers()[k];
+    $('#pAv').innerHTML = avatarHTML(u, 'w-24 h-24 text-3xl'); $('#pName').textContent = u.name; $('#pRole').innerHTML = badge(u.role);
+    show('#profileModal');
+  }
+  $('#userChip').addEventListener('click', openProfile);
+  $('#pClose').addEventListener('click', () => hide('#profileModal'));
+  $('#pTier').addEventListener('click', () => { hide('#profileModal'); openTier(); });
+  $('#pOut').addEventListener('click', () => { hide('#profileModal'); LS.del('acc:cur'); refreshAuth(); toast('Hisobdan chiqdingiz!'); });
+  $('#pFile').addEventListener('change', () => {
+    const f = $('#pFile').files[0]; if (!f || !f.type.startsWith('image/')) { toast('Rasm tanlang!', true); return; }
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const sz = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 256, 256);
+      URL.revokeObjectURL(url);
+      const us = getUsers(), k = currentUser(); us[k].avatar = c.toDataURL('image/jpeg', .85); saveUsers(us);
+      openProfile(); refreshAuth(); toast('Profil rasmi yangilandi!');
+    };
+    img.onerror = () => toast("Rasmni o'qib bo'lmadi", true);
+    img.src = url; $('#pFile').value = '';
+  });
+
+  /* Boshqaruv paneli (faqat ADMIN) */
+  const rowCls = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm';
+  async function adminRender() {
+    if (!isAdmin()) return;
+    const us = getUsers(), me = currentUser(), files = await allFiles();
+    $('#adStats').textContent = `Foydalanuvchilar: ${Object.keys(us).length} • Fayllar: ${files.length} • Xabarlar: ${getMsgs().length}`;
+    $('#adUsers').innerHTML = Object.keys(us).map(k => {
+      const u = us[k];
+      return `<div class="${rowCls}">${avatarHTML(u, 'w-8 h-8 text-xs')}<span class="font-semibold truncate flex-1">${esc(u.name)}</span>
+        <select data-ar="${k}" ${k === me ? 'disabled' : ''} class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${['', ...ROLES].map(r => `<option value="${r}" ${(u.role || '') === r ? 'selected' : ''}>${r || '— toifasiz —'}</option>`).join('')}</select>
+        ${k === me ? '' : `<button data-au="${k}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>`}</div>`;
+    }).join('');
+    $('#adFiles').innerHTML = files.length ? files.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName || '')} • ${r.tier || 'NORMAL'} → ${(r.vis || ['hamma']).join(', ')}</span></span><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
+  }
+  $('#adminBtn').addEventListener('click', () => { if (isAdmin()) { show('#adminModal'); adminRender(); } });
+  $('#adClose').addEventListener('click', () => hide('#adminModal'));
+  $('#adminModal').addEventListener('change', e => {
+    const k = e.target.dataset.ar; if (!k || !isAdmin()) return;
+    const us = getUsers(); if (us[k]) { us[k].role = e.target.value || null; saveUsers(us); toast('Toifa yangilandi'); adminRender(); chatRender(); }
+  });
+  $('#adminModal').addEventListener('click', async e => {
+    if (!isAdmin()) return;
+    const au = e.target.dataset.au, af = e.target.dataset.af;
+    if (au && confirm("Foydalanuvchi o'chirilsinmi?")) { const us = getUsers(); delete us[au]; saveUsers(us); adminRender(); chatRender(); }
+    if (af && confirm("Fayl o'chirilsinmi?")) { await delFile(Number(af)); adminRender(); renderMine(); renderTop(); }
+  });
+  $('#adClearChat').addEventListener('click', () => { if (isAdmin() && confirm('Chat tozalansinmi?')) { LS.set('chat:msgs', '[]'); chatRender(); adminRender(); } });
+
+  /* Chat (bir brauzerdagi hisoblar orasida, oynalar bir-biri bilan sinxron) */
+  const getMsgs = () => { try { return JSON.parse(LS.get('chat:msgs') || '[]') || []; } catch (e) { return []; } };
+  function chatRender() {
+    const box = $('#chatBox'), us = getUsers(), me = currentUser(), adm = isAdmin(), m = getMsgs();
+    box.innerHTML = m.length ? m.map(x => {
+      const u = us[x.u] || { name: x.name, role: x.role }, mine = x.u === me;
+      return `<div class="flex gap-2 ${mine ? 'flex-row-reverse' : ''}">${avatarHTML(u, 'w-7 h-7 text-[10px]')}<div class="max-w-[75%] ${mine ? 'text-right' : ''}">
+        <div class="text-[11px] text-slate-500">${esc(u.name || '?')} ${badge(u.role)} • ${new Date(x.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${adm ? ` <button data-cd="${x.id}" class="text-red-500 font-bold">×</button>` : ''}</div>
+        <div class="inline-block mt-0.5 px-3 py-2 rounded-2xl text-sm text-left break-words ${mine ? 'bg-brand text-white' : 'bg-slate-100 dark:bg-slate-800'}">${esc(x.txt)}</div></div></div>`;
+    }).join('') : '<p class="text-sm text-slate-500 text-center mt-6">Hali xabar yo\'q. Birinchi bo\'lib yozing!</p>';
+    box.scrollTop = box.scrollHeight;
+  }
+  $('#chatFab').addEventListener('click', () => {
+    const p = $('#chatPanel'); p.classList.toggle('hidden'); p.classList.toggle('flex'); chatRender(); $('#chatIn').focus();
+  });
+  $('#chatForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const k = currentUser(), txt = $('#chatIn').value.trim(); if (!k || !myRole() || !txt) return;
+    const u = getUsers()[k], m = getMsgs();
+    m.push({ id: Date.now() + '' + Math.floor(Math.random() * 1000), u: k, name: u.name, role: u.role, t: Date.now(), txt });
+    LS.set('chat:msgs', JSON.stringify(m.slice(-200))); $('#chatIn').value = ''; chatRender();
+  });
+  $('#chatBox').addEventListener('click', e => {
+    const id = e.target.dataset.cd; if (!id || !isAdmin()) return;
+    LS.set('chat:msgs', JSON.stringify(getMsgs().filter(x => x.id !== id))); chatRender();
+  });
+  window.addEventListener('storage', e => { if (e.key === 'chat:msgs') chatRender(); if (e.key === 'acc:users') refreshAuth(); });
 
   refreshAuth();
   migrateViews().then(() => { renderMine(); renderTop(); });
