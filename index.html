@@ -52,6 +52,7 @@ tailwind.config = {
       <a href="#bosh" class="hover:text-brand">Bosh sahifa</a>
       <a href="#imkoniyatlar" class="hover:text-brand">Imkoniyatlar</a>
             <a href="#top" class="hover:text-brand">Top fayllar</a>
+      <a href="#mine" class="hover:text-brand">Fayllarim</a>
       <a href="#yuklash" class="hover:text-brand">Fayl yuklash</a>
       <a href="#aloqa" class="hover:text-brand">Aloqa</a>
     </nav>
@@ -70,6 +71,7 @@ tailwind.config = {
     <a href="#bosh" class="block py-1">Bosh sahifa</a>
     <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
         <a href="#top" class="block py-1">Top fayllar</a>
+    <a href="#mine" class="block py-1">Fayllarim</a>
     <a href="#yuklash" class="block py-1">Fayl yuklash</a>
     <a href="#aloqa" class="block py-1">Aloqa</a>
   </div>
@@ -126,39 +128,45 @@ tailwind.config = {
       <h2 class="text-xl sm:text-2xl font-bold">Eng ko'p ko'rilgan top fayllar</h2>
       <p class="text-sm text-slate-500">Foydalanuvchilar yuklagan va eng ko'p ochilgan fayllar reytingi</p>
     </div>
-    <button id="topClose" type="button" class="ml-auto text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button>
+    <button data-close="#top" type="button" class="ml-auto text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button>
   </div>
   <div id="topList" class="space-y-3"></div>
 </section>
 
 <!-- UPLOAD -->
-<section id="yuklash" class="max-w-4xl mx-auto px-4 py-10">
-  <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+<section id="yuklash" class="max-w-4xl mx-auto px-4 py-5">
+  <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm">
     <div class="flex items-center gap-3">
-      <span class="w-11 h-11 rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="upload-cloud" class="w-6 h-6"></i></span>
+      <span class="w-9 h-9 rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="upload-cloud" class="w-5 h-5"></i></span>
       <div>
-        <h2 class="text-xl sm:text-2xl font-bold">Fayl yuklash</h2>
-        <p class="text-sm text-slate-500">Rasm, video yoki hujjatingizni yuklang — nomi va kalit so'zlari bo'yicha qidiruvda chiqadi, ochib ko'riladi va yuklab olinadi.</p>
+        <h2 class="text-lg font-bold">Fayl yuklash</h2>
+        <p class="text-sm text-slate-500">Nomi va tavsifi bo'yicha qidiruvda chiqadi.</p>
       </div>
     </div>
-    <form id="uploadForm" class="mt-6 grid gap-3">
+    <form id="uploadForm" class="mt-4 grid gap-2.5">
+      <div class="grid gap-2.5 sm:grid-cols-2">
       <input id="upTitle" type="text" maxlength="100" required placeholder="Fayl nomi (masalan: Toshkent manzarasi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       <input id="upDesc" type="text" maxlength="200" placeholder="Diqqatni tortadigan tavsif yozing (masalan: Toshkentning eng go'zal kechqurun manzarasi!)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      </div>
       <div class="px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><div class="text-sm font-semibold mb-2">Kimlar ko'ra oladi?</div><div id="upVis" class="flex flex-wrap gap-4"></div></div>
-      <label id="dropZone" class="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
-        <i data-lucide="file-up" class="w-8 h-8 text-slate-400"></i>
-        <span id="upFileName" class="text-sm text-slate-500">Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko'pi 50 MB)</span>
+      <label id="dropZone" class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
+        <i data-lucide="file-up" class="w-5 h-5 text-slate-400"></i>
+        <span id="upFileName" class="text-sm text-slate-500">Faylni tanlash uchun bosing yoki shu yerga tashlang</span>
         <input id="upFile" type="file" required class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
       </label>
       <div class="flex flex-wrap items-center gap-3">
-        <button type="submit" class="px-6 py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Yuklash</button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Yuklash</button>
         <span id="upStatus" class="text-sm text-slate-500" aria-live="polite"></span>
       </div>
     </form>
-    <div id="myFilesWrap" class="mt-8 hidden">
-      <h3 class="font-bold mb-3">Yuklangan fayllar</h3>
-      <div id="myFiles" class="space-y-2"></div>
-    </div>
+  </div>
+</section>
+
+<!-- MY FILES -->
+<section id="mine" class="hidden max-w-4xl mx-auto px-4 py-6">
+  <div id="myFilesWrap" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5">
+    <div class="flex items-center justify-between mb-3"><h2 class="text-lg font-bold">Yuklagan fayllarim</h2><button data-close="#mine" type="button" class="text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button></div>
+    <div id="myFiles" class="space-y-2"></div>
   </div>
 </section>
 
@@ -525,8 +533,7 @@ tailwind.config = {
   async function renderMine() {
     let list = [];
     list = sbFiles.filter(r => isAdmin() || r.owner === currentUser());
-    $('#myFilesWrap').classList.toggle('hidden', !list.length);
-    $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '';
+        $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '<p class="text-sm text-slate-500">Hali fayl yuklanmagan.</p>';
     $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
       await deleteFile(b.dataset.del); renderMine(); renderTop(); toast("Fayl o'chirildi!");
       $('#upStatus').textContent = 'Fayl o\'chirildi.';
@@ -536,7 +543,7 @@ tailwind.config = {
 
   const upFile = $('#upFile'), upStatus = $('#upStatus'), dz = $('#dropZone');
   upFile.addEventListener('change', () => {
-    $('#upFileName').textContent = upFile.files[0] ? upFile.files[0].name : 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
+    $('#upFileName').textContent = upFile.files[0] ? upFile.files[0].name : 'Faylni tanlash uchun bosing yoki shu yerga tashlang';
   });
   ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('border-brand'); }));
   ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('border-brand'); }));
@@ -550,16 +557,15 @@ tailwind.config = {
     const f = upFile.files[0];
     if (!f) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
     const vis = getVis(); if (!vis.length) { upStatus.textContent = 'Kamida bitta toifani tanlang.'; return; }
-    if (f.size > MAX) { upStatus.textContent = 'Fayl hajmi 50 MB dan oshmasligi kerak.'; return; }
-    upStatus.textContent = 'Yuklanmoqda...';
+        upStatus.textContent = 'Yuklanmoqda...';
     try {
       await uploadFile(f, vis);
       upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
-      e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang (eng ko\'pi 50 MB)';
+      e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang';
       renderMine(); renderTop(); toast('Yuklandi!');
     } catch (err) {
       toast('Xatolik: fayl yuklanmadi!', true);
-      upStatus.textContent = 'Xatolik: faylni saqlab bo\'lmadi. Brauzer xotirasi cheklangan bo\'lishi mumkin.';
+      upStatus.textContent = 'Xatolik: fayl yuklanmadi. U serverdagi hajm chegarasidan katta yoki xotira to\'lgan bo\'lishi mumkin.';
     }
   });
 
@@ -923,14 +929,13 @@ tailwind.config = {
     await sb.from('messages').delete().eq('id', id); msgs = msgs.filter(x => x.id !== id); chatRender();
   });
 
-  /* ===== Top fayllar: tugma bosilganda ochiladi ===== */
-  const topSec = $('#top');
+  /* ===== Top fayllar va Fayllarim: tugma bosilganda ochiladi ===== */
   document.addEventListener('click', e => {
-    if (e.target.closest('#topClose')) { topSec.classList.add('hidden'); return; }
-    const a = e.target.closest('a[href="#top"]'); if (!a) return;
-    e.preventDefault();
-    if (!topSec.classList.contains('hidden')) { topSec.classList.add('hidden'); return; }
-    topSec.classList.remove('hidden'); renderTop(); topSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const c = e.target.closest('[data-close]'); if (c) { $(c.dataset.close).classList.add('hidden'); return; }
+    const a = e.target.closest('a[href="#top"], a[href="#mine"]'); if (!a) return;
+    e.preventDefault(); const sec = $(a.getAttribute('href'));
+    if (!sec.classList.contains('hidden')) { sec.classList.add('hidden'); return; }
+    sec.classList.remove('hidden'); renderTop(); renderMine(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   /* ===== Ishga tushirish ===== */
