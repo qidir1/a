@@ -69,7 +69,8 @@ tailwind.config = {
   <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex-col gap-3 text-sm font-medium">
     <a href="#bosh" class="block py-1">Bosh sahifa</a>
     <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
-        <a href="#yuklash" class="block py-1">Fayl yuklash</a>
+        <a href="#top" class="block py-1">Top fayllar</a>
+    <a href="#yuklash" class="block py-1">Fayl yuklash</a>
     <a href="#aloqa" class="block py-1">Aloqa</a>
   </div>
 </header>
@@ -118,13 +119,14 @@ tailwind.config = {
 </section>
 
 <!-- TOP FILES -->
-<section id="top" class="max-w-4xl mx-auto px-4 py-10">
+<section id="top" class="hidden max-w-4xl mx-auto px-4 py-10">
   <div class="flex items-center gap-3 mb-5">
     <span class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-500 grid place-items-center"><i data-lucide="trophy" class="w-6 h-6"></i></span>
     <div>
       <h2 class="text-xl sm:text-2xl font-bold">Eng ko'p ko'rilgan top fayllar</h2>
       <p class="text-sm text-slate-500">Foydalanuvchilar yuklagan va eng ko'p ochilgan fayllar reytingi</p>
     </div>
+    <button id="topClose" type="button" class="ml-auto text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button>
   </div>
   <div id="topList" class="space-y-3"></div>
 </section>
@@ -919,6 +921,16 @@ tailwind.config = {
   $('#chatBox').addEventListener('click', async e => {
     const id = Number(e.target.dataset.cd); if (!id || !isAdmin()) return;
     await sb.from('messages').delete().eq('id', id); msgs = msgs.filter(x => x.id !== id); chatRender();
+  });
+
+  /* ===== Top fayllar: tugma bosilganda ochiladi ===== */
+  const topSec = $('#top');
+  document.addEventListener('click', e => {
+    if (e.target.closest('#topClose')) { topSec.classList.add('hidden'); return; }
+    const a = e.target.closest('a[href="#top"]'); if (!a) return;
+    e.preventDefault();
+    if (!topSec.classList.contains('hidden')) { topSec.classList.add('hidden'); return; }
+    topSec.classList.remove('hidden'); renderTop(); topSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   /* ===== Ishga tushirish ===== */
