@@ -8,6 +8,10 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="1 Qidiruv — Barchasi bitta qidiruvda">
 <meta property="og:description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling. Bepul, tez va qulay!">
+<meta property="og:locale" content="uz_UZ">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#2563EB">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563EB'/%3E%3Ccircle cx='14' cy='14' r='6' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M19 19l6 6' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <title>1 Qidiruv — Barchasi bitta qidiruvda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,9 +41,12 @@ tailwind.config = {
   @keyframes shimmer { to { background-position: -200% 0; } }
   .pill-active { background: #2563EB; color: #fff; border-color: #2563EB; }
   kbd { font-family: inherit; }
+  :focus-visible { outline: 2px solid #38BDF8; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body class="bg-lightbg text-slate-800 dark:bg-darkbg dark:text-slate-200 transition-colors duration-300 antialiased">
+<noscript><div class="p-4 text-center bg-red-600 text-white text-sm font-semibold">Saytdan foydalanish uchun brauzerda JavaScript yoqilgan bo'lishi kerak.</div></noscript>
 
 <!-- HEADER -->
 <header class="sticky top-0 z-40 backdrop-blur bg-lightbg/80 dark:bg-darkbg/80 border-b border-slate-200 dark:border-slate-800">
@@ -53,6 +60,7 @@ tailwind.config = {
       <a href="#imkoniyatlar" class="hover:text-brand">Imkoniyatlar</a>
             <a href="#top" class="hover:text-brand">Top fayllar</a>
       <a href="#mine" class="hover:text-brand">Fayllarim</a>
+      <a href="#saved" class="hover:text-brand">Saqlanganlar</a>
       <a href="#yuklash" class="hover:text-brand">Fayl yuklash</a>
       <a href="#aloqa" class="hover:text-brand">Aloqa</a>
     </nav>
@@ -72,6 +80,7 @@ tailwind.config = {
     <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
         <a href="#top" class="block py-1">Top fayllar</a>
     <a href="#mine" class="block py-1">Fayllarim</a>
+    <a href="#saved" class="block py-1">Saqlanganlar</a>
     <a href="#yuklash" class="block py-1">Fayl yuklash</a>
     <a href="#aloqa" class="block py-1">Aloqa</a>
   </div>
@@ -91,7 +100,8 @@ tailwind.config = {
       <span class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">🔒 Toifalar bo'yicha himoya</span>
     </div>
 
-    <form id="searchForm" class="mt-9" role="search" autocomplete="off">
+    <form id="searchForm" class="mt-9 relative" role="search" autocomplete="off">
+      <div id="sugg" role="listbox" class="hidden absolute left-0 right-0 top-full mt-2 z-30 text-left rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden"></div>
       <div class="search-glow flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-lg transition">
         <i data-lucide="search" class="w-5 h-5 ml-2 text-slate-400 shrink-0"></i>
         <input id="q" type="text" maxlength="120" aria-label="Qidiruv maydoni" placeholder="Nimani qidirmoqchisiz? Masalan: Ob-havo, Dasturlash, Yangiliklar..." class="flex-1 min-w-0 bg-transparent outline-none px-1 py-3 text-sm sm:text-base placeholder:text-slate-400">
@@ -109,10 +119,17 @@ tailwind.config = {
       </div>
     <div class="mt-4 flex flex-wrap justify-center gap-2">
       <select id="fTier" aria-label="Toifa" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Barcha toifalar</option><option>NORMAL</option><option>PREMIUM</option><option>PRIV</option></select>
-      <select id="fSort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Saralash: tartib bo'yicha</option><option value="new">Eng yangilari</option><option value="views">Eng ko'p ko'rilgan</option></select>
+      <select id="fSort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Saralash: mosligi bo'yicha</option><option value="new">Eng yangilari</option><option value="views">Eng ko'p ko'rilgan</option></select>
     </div>
   </div>
 </section>
+
+<!-- STATS -->
+<div id="heroStats" class="hidden max-w-4xl mx-auto px-4 pb-6 grid grid-cols-3 gap-3 text-center">
+  <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div id="stF" class="text-xl sm:text-2xl font-extrabold text-brand">0</div><div class="text-xs text-slate-500">Fayl</div></div>
+  <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div id="stU" class="text-xl sm:text-2xl font-extrabold text-brand">0</div><div class="text-xs text-slate-500">Foydalanuvchi</div></div>
+  <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div id="stV" class="text-xl sm:text-2xl font-extrabold text-brand">0</div><div class="text-xs text-slate-500">Jami ko'rish</div></div>
+</div>
 
 <!-- RESULTS -->
 <section id="natijalar" class="max-w-4xl mx-auto px-4 pb-10 hidden" aria-live="polite">
@@ -133,6 +150,18 @@ tailwind.config = {
   <div id="topList" class="space-y-3"></div>
 </section>
 
+<!-- SAVED -->
+<section id="saved" class="hidden max-w-4xl mx-auto px-4 py-10">
+  <div class="flex items-center gap-3 mb-5">
+    <span class="w-11 h-11 rounded-xl bg-red-500/10 text-red-500 grid place-items-center text-xl">♥</span>
+    <div><h2 class="text-xl sm:text-2xl font-bold">Saqlanganlar</h2><p class="text-sm text-slate-500">Saqlagan va yaqinda ko'rgan fayllaringiz (shu qurilmada saqlanadi)</p></div>
+    <button data-close="#saved" type="button" class="ml-auto text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button>
+  </div>
+  <div id="savedList" class="grid gap-3 sm:grid-cols-2 md:grid-cols-3"></div>
+  <div class="flex items-center justify-between mt-8 mb-3"><h3 class="font-bold text-lg">🕘 Yaqinda ko'rilgan</h3><button id="recentClear" type="button" class="hidden text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">Tarixni tozalash</button></div>
+  <div id="recentList" class="grid gap-3 sm:grid-cols-2 md:grid-cols-3"></div>
+</section>
+
 <!-- UPLOAD -->
 <section id="yuklash" class="max-w-4xl mx-auto px-4 py-5">
   <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm">
@@ -145,18 +174,19 @@ tailwind.config = {
     </div>
     <form id="uploadForm" class="mt-4 grid gap-2.5">
       <div class="grid gap-2.5 sm:grid-cols-2">
-      <input id="upTitle" type="text" maxlength="100" required placeholder="Fayl nomi (masalan: Toshkent manzarasi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <input id="upTitle" type="text" maxlength="100" placeholder="Fayl nomi (bo'sh qolsa — fayl nomi olinadi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       <input id="upDesc" type="text" maxlength="200" placeholder="Diqqatni tortadigan tavsif yozing (masalan: Toshkentning eng go'zal kechqurun manzarasi!)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       </div>
       <div class="px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><div class="text-sm font-semibold mb-2">Kimlar ko'ra oladi?</div><div id="upVis" class="flex flex-wrap gap-4"></div></div>
       <label id="dropZone" class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
         <i data-lucide="file-up" class="w-5 h-5 text-slate-400"></i>
-        <span id="upFileName" class="text-sm text-slate-500">Faylni tanlash uchun bosing yoki shu yerga tashlang</span>
-        <input id="upFile" type="file" required class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
+        <span id="upFileName" class="text-sm text-slate-500">Fayllarni tanlash uchun bosing yoki shu yerga tashlang (bir nechta mumkin, har biri 50 MB gacha)</span>
+        <input id="upFile" type="file" multiple class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
       </label>
       <div class="flex flex-wrap items-center gap-3">
         <button type="submit" class="px-5 py-2 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Yuklash</button>
         <span id="upStatus" class="text-sm text-slate-500" aria-live="polite"></span>
+        <div id="upBar" class="hidden w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div id="upBarIn" class="h-full bg-brand transition-all" style="width:0%"></div></div>
       </div>
     </form>
   </div>
@@ -166,6 +196,11 @@ tailwind.config = {
 <section id="mine" class="hidden max-w-4xl mx-auto px-4 py-6">
   <div id="myFilesWrap" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5">
     <div class="flex items-center justify-between mb-3"><h2 class="text-lg font-bold">Yuklagan fayllarim</h2><button data-close="#mine" type="button" class="text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Yopish</button></div>
+    <div class="flex flex-wrap gap-2 mb-3">
+      <input id="mySearch" type="search" maxlength="60" placeholder="Fayllarim ichidan qidirish..." class="flex-1 min-w-[10rem] px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <select id="mySort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="new">Yangi avval</option><option value="old">Eski avval</option><option value="views">Ko'p ko'rilgan</option><option value="name">Nomi bo'yicha</option></select>
+      <button id="myDelSel" type="button" class="hidden px-3 py-2 rounded-xl border border-red-500 text-red-500 text-sm font-semibold hover:bg-red-500/10"></button>
+    </div>
     <div id="myFiles" class="space-y-2"></div>
   </div>
 </section>
@@ -211,6 +246,7 @@ tailwind.config = {
         <li><a class="hover:text-brand" href="#bosh">Bosh sahifa</a></li>
         <li><a class="hover:text-brand" href="#imkoniyatlar">Imkoniyatlar</a></li>
                 <li><a class="hover:text-brand" href="#aloqa">Aloqa</a></li>
+        <li><button id="helpBtn" type="button" class="hover:text-brand">Tezkor tugmalar (?)</button></li>
       </ul>
     </div>
     <div>
@@ -221,7 +257,7 @@ tailwind.config = {
   </div>
   <div class="border-t border-slate-200 dark:border-slate-800">
     <div class="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
-      <p>© 2026 1 Qidiruv. Barcha huquqlar himoyalangan.</p>
+      <p>© <span id="yr">2026</span> 1 Qidiruv. Barcha huquqlar himoyalangan.</p>
       <p class="font-semibold text-slate-700 dark:text-slate-200">Yaratuvchi: Uzbekistan FVV</p>
     </div>
   </div>
@@ -255,6 +291,7 @@ tailwind.config = {
   <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-2xl max-h-[90vh] overflow-auto">
     <div class="flex justify-between items-center"><h2 class="text-lg font-bold">🛠 Boshqaruv paneli</h2><button id="adClose" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
     <p id="adStats" class="text-sm text-slate-500 mt-1"></p>
+    <div id="adChart" class="mt-4 grid gap-3 sm:grid-cols-2"></div>
     <h3 class="font-bold mt-4 mb-2">Foydalanuvchilar</h3><div id="adUsers" class="space-y-2"></div>
     <h3 class="font-bold mt-5 mb-2">Fayllar</h3><div id="adFiles" class="space-y-2"></div>
     <h3 class="font-bold mt-5 mb-2">Chat</h3><button id="adClearChat" class="px-4 py-2 rounded-xl border border-red-500 text-red-500 text-sm font-semibold hover:bg-red-500/10">Butun chatni tozalash</button>
@@ -289,6 +326,24 @@ tailwind.config = {
   </div>
 </div>
 
+<div id="dropOverlay" class="hidden fixed inset-0 z-[80] bg-brand/20 backdrop-blur-sm border-4 border-dashed border-brand grid place-items-center text-2xl font-bold text-brand pointer-events-none">Fayllarni shu yerga tashlang</div>
+
+<div id="helpModal" class="hidden fixed inset-0 z-[68] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="text-lg font-bold">Tezkor tugmalar</h2><button id="hClose" type="button" aria-label="Yopish" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <ul class="mt-4 space-y-2.5 text-sm">
+      <li class="flex items-center justify-between"><span>Qidiruvga o'tish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">/</kbd></li>
+      <li class="flex items-center justify-between"><span>Takliflar ichida yurish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">↑ ↓ Enter</kbd></li>
+      <li class="flex items-center justify-between"><span>Fayllar orasida o'tish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">← →</kbd></li>
+      <li class="flex items-center justify-between"><span>Tungi / kunduzgi rejim</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">T</kbd></li>
+      <li class="flex items-center justify-between"><span>Oynani yopish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">Esc</kbd></li>
+      <li class="flex items-center justify-between"><span>Shu oyna</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">?</kbd></li>
+    </ul>
+  </div>
+</div>
+
+<button id="toTop" type="button" aria-label="Yuqoriga qaytish" class="hidden fixed bottom-5 left-5 z-40 w-11 h-11 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg grid place-items-center hover:border-brand text-lg">↑</button>
+
 <div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 z-[70] px-5 py-3 rounded-xl text-white text-sm font-semibold shadow-xl pointer-events-none" style="opacity:0;transform:translate(-50%,-150%);transition:all .35s ease"></div>
 
 <div id="authModal" class="hidden fixed inset-0 z-[65] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
@@ -303,7 +358,7 @@ tailwind.config = {
     </div>
     <form id="authForm" class="mt-4 grid gap-3">
       <input id="aUser" type="text" required maxlength="20" autocomplete="username" placeholder="Foydalanuvchi nomi (lotin harfi, raqam)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
-      <input id="aPass" type="password" required minlength="6" maxlength="64" autocomplete="current-password" placeholder="Parol (kamida 6 ta belgi)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <div class="relative"><input id="aPass" type="password" required minlength="6" maxlength="64" autocomplete="current-password" placeholder="Parol (kamida 6 ta belgi)" class="w-full pl-4 pr-20 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button id="aEye" type="button" aria-label="Parolni ko'rsatish" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold px-2 py-1 rounded-lg text-slate-500 hover:text-brand">Ko'rsat</button></div>
       <p id="aErr" class="text-sm text-red-500 min-h-[1.25rem]" aria-live="polite"></p>
       <button id="aSubmit" type="submit" class="py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Kirish</button>
     </form>
@@ -315,7 +370,12 @@ tailwind.config = {
   <div class="w-full max-w-3xl max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
     <div class="flex items-start justify-between gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
       <div class="min-w-0"><div id="vTitle" class="font-bold truncate"></div><div id="vMeta" class="text-xs text-slate-500 mt-0.5 truncate"></div></div>
-      <button id="vClose" aria-label="Yopish" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span id="vPos" class="text-xs text-slate-500 mr-1"></span>
+        <button id="vPrev" type="button" aria-label="Oldingi fayl" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none disabled:opacity-30">‹</button>
+        <button id="vNext" type="button" aria-label="Keyingi fayl" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none disabled:opacity-30">›</button>
+        <button id="vClose" aria-label="Yopish" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
+      </div>
     </div>
     <div id="vBody" class="p-4"></div>
     <div id="vFoot" class="p-4 pt-0"></div>
@@ -327,7 +387,7 @@ tailwind.config = {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const icons = () => { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} };
-  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   /* Theme */
   const root = document.documentElement;
@@ -364,7 +424,7 @@ tailwind.config = {
 
   /* Tabs */
   function setTab(cat) {
-    currentCat = cat;
+    currentCat = cat; shownN = PAGE; setHash();
     $$('.tab').forEach(t => {
       const on = t.dataset.cat === cat;
       t.classList.toggle('pill-active', on);
@@ -384,106 +444,66 @@ tailwind.config = {
 
   $('#searchForm').addEventListener('submit', e => { e.preventDefault(); doSearch(input.value); });
 
-  /* Mock data generator */
-  const topics = {
-    'yangilik': { ai: "O'zbekistonda so'nggi kunlarda iqtisodiyot, ta'lim va texnologiya sohalarida yangi loyihalar e'lon qilinmoqda. Eng ishonchli ma'lumot uchun rasmiy axborot agentliklari va davlat idoralarining saytlarini kuzatib borish tavsiya etiladi." },
-    'dollar': { ai: "Valyuta kursi har kuni o'zgarib turadi. Joriy va aniq kursni O'zbekiston Respublikasi Markaziy bankining rasmiy saytidan yoki tijorat banklarining kurs jadvalidan ko'rishingiz mumkin." },
-    'ob-havo': { ai: "Ob-havo ma'lumoti hududga va vaqtga qarab farq qiladi. Kunlik va haftalik prognozni O'zgidromet xizmati hamda ishonchli ob-havo ilovalaridan ko'rish mumkin." },
-    'it': { ai: "IT kurslarni tanlashda avvalo yo'nalishni (veb-dasturlash, mobil ilovalar, ma'lumotlar tahlili, dizayn) aniqlang, so'ng amaliy loyihalar va mentor yordami bor kurslarni afzal ko'ring." },
-    'dastur': { ai: "Dasturlashni o'rganishni Python yoki JavaScript kabi sodda tillardan boshlash qulay. Har kuni kichik amaliy mashqlar bajarish va o'z loyihangizni yaratish eng samarali usul." },
-    'palov': { ai: "An'anaviy palov uchun guruch, sabzi, go'sht, piyoz va zirvak kerak bo'ladi. Muhim jihatlar: sabzini to'g'ri to'g'rash, zirvakni yaxshi qovurish va olovni me'yorida tutish." }
-  };
-  function aiFor(q) {
-    const l = q.toLowerCase();
-    for (const k in topics) if (l.includes(k)) return topics[k].ai;
-    return `«${q}» bo'yicha qisqa xulosa: bu mavzu bo'yicha eng ishonchli ma'lumotni rasmiy manbalar, ta'lim saytlari va mutaxassislar maqolalaridan olish mumkin. Quyida mavzuga oid veb-saytlar, rasmlar, videolar va hujjatlar to'plami berilgan.`;
+  /* ===== Qidiruv (yangilangan) ===== */
+  const PAGE = 12;
+  let shownN = PAGE, seq = 0, viewMode = 'grid';
+  function lsGet(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  viewMode = lsGet('view', 'grid') === 'list' ? 'list' : 'grid';
+  function favKey() { return 'fav:' + (currentUser() || '_'); }
+  function recKey() { return 'rec:' + (currentUser() || '_'); }
+  const termsOf = q => String(q || '').toLowerCase().split(/\s+/).filter(t => t.length >= 2);
+  function hl(text, terms) {
+    text = String(text == null ? '' : text);
+    if (!terms || !terms.length) return esc(text);
+    const re = new RegExp('(' + terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+    return text.split(re).map((p, i) => i % 2 ? '<mark class="bg-amber-300/70 dark:bg-amber-400/30 text-inherit rounded px-0.5">' + esc(p) + '</mark>' : esc(p)).join('');
   }
-  function build(q) {
-    const s = q.trim(), slug = encodeURIComponent(s.toLowerCase().replace(/\s+/g, '-'));
-    return {
-      ai: aiFor(s),
-      web: [
-        { t: `${s} — to'liq qo'llanma va tushuntirish`, u: `www.malumot.uz/${slug}`, d: `${s} haqida batafsil, tushunarli va yangilangan ma'lumotlar. Asosiy tushunchalar, misollar va foydali maslahatlar bir joyda.` },
-        { t: `${s}: eng so'nggi yangiliklar`, u: `www.yangiliklar.uz/mavzu/${slug}`, d: `${s} mavzusidagi dolzarb xabarlar, tahlillar va mutaxassislar fikri. Har kuni yangilanib boradi.` },
-        { t: `${s} bo'yicha ko'p so'raladigan savollar`, u: `www.savoljavob.uz/${slug}`, d: `Foydalanuvchilar ${s} haqida eng ko'p beradigan savollar va ularga qisqa, aniq javoblar.` },
-        { t: `${s} — Vikipediya`, u: `uz.wikipedia.org/wiki/${slug}`, d: `Erkin ensiklopediyada ${s} mavzusiga oid umumiy ma'lumot, tarix va havolalar.` }
-      ],
-      img: ['from-blue-500 to-cyan-400', 'from-indigo-500 to-sky-400', 'from-violet-500 to-blue-400', 'from-sky-500 to-emerald-400', 'from-blue-600 to-indigo-400', 'from-cyan-500 to-blue-500'].map((g, i) => ({ g, t: `${s} — rasm ${i + 1}` })),
-      vid: [
-        { t: `${s} nima? 5 daqiqada tushuntirish`, c: 'Bilim Maktabi', v: "128 ming ko'rish", l: '5:12' },
-        { t: `${s} bo'yicha amaliy darslik`, c: 'Darslar TV', v: "54 ming ko'rish", l: '14:37' },
-        { t: `${s}: boshlovchilar uchun maslahatlar`, c: 'Yangi Bilim', v: "23 ming ko'rish", l: '8:45' }
-      ],
-      doc: [
-        { t: `${s} — o'quv qo'llanma`, f: 'PDF', z: '2,4 MB', p: '36 bet' },
-        { t: `${s} bo'yicha ilmiy maqola`, f: 'DOCX', z: '860 KB', p: '12 bet' },
-        { t: `${s} — taqdimot materiallari`, f: 'PPTX', z: '5,1 MB', p: '24 slayd' }
-      ]
-    };
+  const getHistory = () => lsGet('hist', []);
+  function pushHistory(q) {
+    q = String(q || '').trim(); if (q.length < 2) return;
+    const h = getHistory().filter(x => String(x).toLowerCase() !== q.toLowerCase());
+    h.unshift(q); lsSet('hist', h.slice(0, 8));
+  }
+  function setHash() {
+    try {
+      const p = new URLSearchParams();
+      if (currentQuery) p.set('q', currentQuery);
+      if (currentCat !== 'all') p.set('cat', currentCat);
+      const h = p.toString();
+      history.replaceState(null, '', h ? '#' + h : location.pathname + location.search);
+    } catch (e) {}
   }
 
   const skeleton = `<div class="space-y-4">
     <div class="flex items-center gap-3 text-brand font-medium"><i data-lucide="loader-2" class="w-5 h-5 spinner"></i> Qidirilmoqda...</div>
     <div class="skeleton h-28 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div><div class="skeleton h-20 rounded-2xl"></div></div>`;
 
-  function doSearch(raw) {
+  function doSearch(raw, opts) {
+    opts = opts || {};
     if (!currentUser()) { refreshAuth(); return; }
     const q = (raw || '').trim();
-    
-    currentQuery = q;
+    currentQuery = q; shownN = PAGE;
+    if (!opts.live) { pushHistory(q); hideSugg(); }
+    setHash();
     section.classList.remove('hidden');
-    meta.textContent = '';
-    results.innerHTML = skeleton;
-    icons();
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!opts.live || !currentData) { meta.textContent = ''; results.innerHTML = skeleton; icons(); }
+    if (!opts.live) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     clearTimeout(timer);
+    const mine = ++seq;
     timer = setTimeout(async () => {
-      currentData = build(q);
-      try { currentData.up = await searchUploads(q); } catch (e) { currentData.up = []; }
-      try { await loadProfiles(); } catch (e) {}
-      currentData.users = findUsers(q);
+      const d = {};
+      try { d.up = await searchUploads(q, !opts.live); } catch (e) { d.up = []; }
+      if (!opts.live) { try { await loadProfiles(); } catch (e) {} }
+      if (mine !== seq) return;
+      d.users = findUsers(q);
+      currentData = d;
       render();
-    }, 900);
+    }, opts.live ? 100 : 250);
   }
 
   function sectionTitle(icon, text) {
     return `<h3 class="flex items-center gap-2 font-bold text-lg mb-3"><i data-lucide="${icon}" class="w-5 h-5 text-brand"></i>${text}</h3>`;
-  }
-  function aiBox(d) {
-    return `<div class="fade-up p-5 sm:p-6 rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/10 to-accent/10">
-      <div class="flex items-center gap-2 font-bold text-brand"><i data-lucide="sparkles" class="w-5 h-5"></i> AI Qisqa Javob</div>
-      <p class="mt-3 leading-relaxed text-sm sm:text-base">${esc(d.ai)}</p>
-      <p class="mt-3 text-xs text-slate-500">Bu javob namunaviy (demo) tarzda tuzilgan. Muhim qarorlar uchun rasmiy manbalarni tekshiring.</p></div>`;
-  }
-  function webList(d) {
-    return `<div class="fade-up">${sectionTitle('globe', 'Veb-saytlar')}<div class="space-y-3">` + d.web.map(r => `
-      <a href="#" class="block p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="text-xs text-emerald-600 dark:text-emerald-400">${esc(r.u)}</div>
-        <div class="mt-1 font-semibold text-brand">${esc(r.t)}</div>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">${esc(r.d)}</p></a>`).join('') + `</div></div>`;
-  }
-  function imgGrid(d) {
-    return `<div class="fade-up">${sectionTitle('image', 'Rasmlar')}<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">` + d.img.map(r => `
-      <a href="#" class="group block rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div class="h-28 sm:h-32 bg-gradient-to-br ${r.g} grid place-items-center text-white/90 group-hover:scale-105 transition"><i data-lucide="image" class="w-8 h-8"></i></div>
-        <div class="p-2.5 text-xs font-medium truncate">${esc(r.t)}</div></a>`).join('') + `</div></div>`;
-  }
-  function vidList(d) {
-    return `<div class="fade-up">${sectionTitle('play-circle', 'Videolar')}<div class="grid gap-3 sm:grid-cols-3">` + d.vid.map(r => `
-      <a href="#" class="block rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="relative h-32 bg-gradient-to-br from-slate-800 to-blue-900 grid place-items-center text-white">
-          <i data-lucide="play" class="w-9 h-9"></i>
-          <span class="absolute bottom-2 right-2 text-xs bg-black/70 px-1.5 py-0.5 rounded">${r.l}</span></div>
-        <div class="p-3"><div class="text-sm font-semibold line-clamp-2">${esc(r.t)}</div>
-        <div class="text-xs text-slate-500 mt-1">${r.c} • ${r.v}</div></div></a>`).join('') + `</div></div>`;
-  }
-  function docList(d) {
-    return `<div class="fade-up">${sectionTitle('file-text', 'Hujjatlar')}<div class="space-y-3">` + d.doc.map(r => `
-      <a href="#" class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand transition">
-        <div class="w-12 h-12 shrink-0 rounded-xl bg-brand/10 text-brand grid place-items-center text-xs font-extrabold">${r.f}</div>
-        <div class="min-w-0"><div class="font-semibold truncate">${esc(r.t)}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${r.p} • ${r.z}</div></div>
-        <i data-lucide="download" class="w-5 h-5 ml-auto text-slate-400 shrink-0"></i></a>`).join('') + `</div></div>`;
   }
 
   function applyFilters(list) {
@@ -493,13 +513,28 @@ tailwind.config = {
     if (so === 'views') l.sort((a, b) => (b.views || 0) - (a.views || 0));
     return l;
   }
-  ['#fTier', '#fSort'].forEach(i => $(i).addEventListener('change', () => { if (currentData) render(); }));
+  function filtered(d) {
+    const base = applyFilters(d.up || []);
+    return currentCat === 'all' ? base : base.filter(r => r.kind === currentCat);
+  }
+  function updateTabCounts(d) {
+    const c = { all: 0, img: 0, vid: 0, doc: 0 };
+    if (d) { const base = applyFilters(d.up || []); c.all = base.length; base.forEach(r => { c[r.kind] = (c[r.kind] || 0) + 1; }); }
+    $$('.tab').forEach(t => {
+      if (!t.dataset.label) t.dataset.label = t.textContent.trim();
+      t.textContent = d ? t.dataset.label + ' (' + (c[t.dataset.cat] || 0) + ')' : t.dataset.label;
+    });
+  }
+
   function render() {
     const d = currentData; if (!d) return;
-    const names = { all: 'Barchasi', web: 'Veb-saytlar', img: 'Rasmlar', vid: 'Videolar', doc: 'Hujjatlar', ai: 'AI Javob' };
-    meta.innerHTML = `${currentQuery ? `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar` : '<strong>Barcha fayllar</strong>'} • Bo'lim: ${names[currentCat]}`;
-    let html = '';
-    html = (currentCat === 'all' ? usersHTML(d.users || []) : '') + uploadsHTML(applyFilters(d.up || []), currentCat);
+    const names = { all: 'Barchasi', img: 'Rasmlar', vid: 'Videolar', doc: 'Hujjatlar' };
+    const list = filtered(d), terms = termsOf(currentQuery);
+    updateTabCounts(d);
+    const vb = (m, label) => `<button type="button" data-view="${m}" class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition ${viewMode === m ? 'pill-active' : 'border-slate-300 dark:border-slate-600 hover:border-brand'}">${label}</button>`;
+    meta.innerHTML = `<div class="flex flex-wrap items-center gap-2"><span>${currentQuery ? `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar` : '<strong>Barcha fayllar</strong>'} • Bo'lim: ${names[currentCat] || ''} • ${list.length} ta fayl</span>
+      <span class="ml-auto inline-flex flex-wrap items-center gap-2">${vb('grid', '▦ Katak')}${vb('list', '☰ Ro\'yxat')}<button type="button" data-share class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-semibold hover:border-brand transition">🔗 Ulashish</button></span></div>`;
+    let html = (currentCat === 'all' ? usersHTML(d.users || []) : '') + uploadsHTML(list.slice(0, shownN), list.length, terms);
     if (!html) {
       html = `<div class="fade-up p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
         <div class="w-12 h-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-400"><i data-lucide="search-x" class="w-6 h-6"></i></div>
@@ -508,7 +543,6 @@ tailwind.config = {
         <a href="#yuklash" class="inline-block mt-4 px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Fayl yuklash</a></div>`;
     }
     results.innerHTML = html;
-    $$('#results a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
     icons();
   }
 
@@ -517,78 +551,167 @@ tailwind.config = {
   const typeOf = f => f.type.startsWith('image/') ? 'img' : f.type.startsWith('video/') ? 'vid' : 'doc';
   const fmtSize = b => !b ? '—' : b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
-  async function searchUploads(q) {
-    await loadFiles();
-    const terms = q.toLowerCase().split(/\s+/).filter(t => t.length >= 2);
-    if (!terms.length) return await allItems();
-    return (await allItems()).filter(r => {
-      const hay = (r.title + ' ' + r.desc + ' ' + r.name).toLowerCase();
-      return terms.some(t => hay.includes(t));
-    });
+  async function searchUploads(q, fresh) {
+    if (fresh) await loadFiles();
+    const terms = termsOf(q), all = await allItems();
+    if (!terms.length) return all;
+    const has = (v, t) => String(v || '').toLowerCase().includes(t);
+    const score = r => terms.reduce((n, t) => n + (has(r.title, t) ? 3 : 0) + (has(r.desc, t) ? 2 : 0) + (has(r.name, t) ? 1 : 0), 0);
+    return all.map(r => ({ r, s: score(r) })).filter(o => o.s > 0)
+      .sort((a, b) => b.s - a.s || (b.r.at || 0) - (a.r.at || 0)).map(o => o.r);
   }
 
-  function fileCard(r, withDelete) {
-    const url = esc(r.url || '');
-    const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
-    let preview;
-    if (r.kind === 'img') preview = `<img data-open="${r.id}" src="${url}" alt="${esc(r.title)}" class="w-full h-40 object-cover cursor-pointer">`;
-    else if (r.kind === 'vid') preview = `<video src="${url}" controls preload="metadata" class="w-full h-40 bg-black"></video>`;
-    else preview = `<div class="h-40 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-brand/20 to-accent/20 text-brand"><i data-lucide="file-text" class="w-10 h-10"></i><span class="text-xs font-extrabold tracking-wide px-2 py-0.5 rounded bg-brand text-white">${esc((r.name.split('.').pop() || 'FAYL').toUpperCase().slice(0, 5))}</span></div>`;
-    return `<div class="rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-      ${preview}
+  const kindLabel = k => k === 'img' ? 'Rasm' : k === 'vid' ? 'Video' : 'Hujjat';
+  function thumbHTML(r, big) {
+    const url = esc(r.url || ''), id = esc(r.id);
+    if (r.kind === 'img') return `<img data-open="${id}" loading="lazy" src="${url}" alt="${esc(r.title)}" class="${big ? 'w-full h-40' : 'w-14 h-14 rounded-xl'} object-cover cursor-pointer shrink-0">`;
+    if (r.kind === 'vid') return big
+      ? `<video src="${url}" controls preload="metadata" class="w-full h-40 bg-black"></video>`
+      : `<div data-open="${id}" class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-slate-800 text-white cursor-pointer"><i data-lucide="play" class="w-6 h-6"></i></div>`;
+    const ext = esc((String(r.name).split('.').pop() || 'FAYL').toUpperCase().slice(0, 5));
+    return big
+      ? `<div data-open="${id}" class="h-40 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-brand/20 to-accent/20 text-brand cursor-pointer"><i data-lucide="file-text" class="w-10 h-10"></i><span class="text-xs font-extrabold tracking-wide px-2 py-0.5 rounded bg-brand text-white">${ext}</span></div>`
+      : `<div data-open="${id}" class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-brand/10 text-brand text-[10px] font-extrabold cursor-pointer">${ext}</div>`;
+  }
+  function favBtn(r, cls) {
+    const on = new Set(lsGet(favKey(), [])).has(r.key);
+    return `<button type="button" data-fav="${esc(r.id)}" aria-label="Saqlash" title="Saqlash" class="${cls || ''} text-lg leading-none ${on ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}">${on ? '♥' : '♡'}</button>`;
+  }
+
+  function fileCard(r, withDelete, terms, mode) {
+    const url = esc(r.url || ''), id = esc(r.id);
+    const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.at ? ' • ' + esc(new Date(r.at).toLocaleDateString()) : ''}`;
+    const owner = r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong>${dmBtn(r)}</div>` : '';
+    const sel = withDelete ? `<label class="absolute top-2 left-2 z-10 w-6 h-6 rounded-md bg-white/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-600 grid place-items-center cursor-pointer"><input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600"></label>` : '';
+    const del = withDelete ? `<button data-del="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : '';
+    if (mode === 'list') {
+      return `<div class="fade-up relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        ${sel ? `<input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600 w-4 h-4 shrink-0">` : ''}
+        ${thumbHTML(r, false)}
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold truncate">${hl(r.title, terms)}</div>
+          ${r.desc ? `<div class="text-sm text-brand dark:text-accent truncate">✨ ${hl(r.desc, terms)}</div>` : ''}
+          <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}${r.ownerName ? ' • 👤 ' + esc(r.ownerName) : ''}</div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">${favBtn(r, 'px-1')}
+          <button data-open="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
+          <a data-dl href="${url}" download="${esc(r.name)}" class="hidden sm:inline-block text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>${del}</div></div>`;
+    }
+    return `<div class="fade-up relative rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      ${sel}${thumbHTML(r, true)}
       <div class="p-3">
-        <div class="text-sm font-semibold truncate">${esc(r.title)}</div>
-        <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish</div>
-        ${r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong>${dmBtn(r)}</div>` : ''}
-        ${r.desc ? `<p class="mt-2 text-sm font-semibold leading-snug px-3 py-2 rounded-lg border-l-4 border-brand bg-brand/10 text-brand dark:text-accent line-clamp-3">✨ ${esc(r.desc)}</p>` : ''}
+        <div class="text-sm font-semibold truncate">${hl(r.title, terms)}</div>
+        <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}</div>
+        ${owner}
+        ${r.desc ? `<p class="mt-2 text-sm font-semibold leading-snug px-3 py-2 rounded-lg border-l-4 border-brand bg-brand/10 text-brand dark:text-accent line-clamp-3">✨ ${hl(r.desc, terms)}</p>` : ''}
         <div class="mt-3 flex gap-2">
-          <button data-open="${r.id}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
+          <button data-open="${id}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
           <a data-dl href="${url}" download="${esc(r.name)}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>
-          ${withDelete ? `<button data-del="${r.id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : ''}
+          ${favBtn(r, 'px-2 rounded-lg border border-slate-300 dark:border-slate-600')}${del}
         </div></div></div>`;
   }
-  function uploadsHTML(items, cat) {
-    const list = cat === 'all' ? items : items.filter(r => r.kind === cat);
-    if (!list.length) return '';
-    return `<div class="fade-up">${sectionTitle('folder-open', 'Yuklangan fayllar')}<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, false)).join('')}</div></div>`;
+  function uploadsHTML(items, total, terms) {
+    if (!items.length) return '';
+    const grid = viewMode === 'list' ? 'space-y-3' : 'grid gap-3 sm:grid-cols-2 md:grid-cols-3';
+    const more = total > items.length ? `<div class="mt-4 text-center"><button type="button" data-more class="px-6 py-2.5 rounded-xl border border-brand text-brand text-sm font-semibold hover:bg-brand/10 transition">Yana ko'rsatish (${total - items.length})</button></div>` : '';
+    return `<div class="fade-up">${sectionTitle('folder-open', 'Yuklangan fayllar')}<div class="${grid}">${items.map(r => fileCard(r, false, terms, viewMode)).join('')}</div>${more}</div>`;
   }
 
+  /* ===== Fayllarim ===== */
+  const selectedIds = () => $$('#myFiles [data-sel]:checked').map(c => c.dataset.sel);
+  function updateSel() {
+    const n = selectedIds().length, b = $('#myDelSel');
+    b.classList.toggle('hidden', !n); b.textContent = "Tanlanganlarni o'chirish (" + n + ')';
+  }
+  async function deleteMany(ids) {
+    const rs = ids.map(id => sbFiles.find(c => c.id === id)).filter(Boolean);
+    if (!rs.length) return;
+    await sb.storage.from('files').remove(rs.map(r => r.path));
+    await sb.from('files').delete().in('id', rs.map(r => r.sid));
+    await loadFiles();
+  }
   async function renderMine() {
-    let list = [];
-    list = sbFiles.filter(r => isAdmin() || r.owner === currentUser());
-        $('#myFiles').innerHTML = list.length ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true)).join('')}</div>` : '<p class="text-sm text-slate-500">Hali fayl yuklanmagan.</p>';
-    $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
-      await deleteFile(b.dataset.del); renderMine(); renderTop(); toast("Fayl o'chirildi!");
-      $('#upStatus').textContent = 'Fayl o\'chirildi.';
+    const q = ($('#mySearch').value || '').trim().toLowerCase(), so = $('#mySort').value;
+    let list = sbFiles.filter(r => isAdmin() || r.owner === currentUser());
+    if (q) list = list.filter(r => (r.title + ' ' + r.desc + ' ' + r.name).toLowerCase().includes(q));
+    if (so === 'old') list.sort((a, b) => (a.at || 0) - (b.at || 0));
+    else if (so === 'views') list.sort((a, b) => (b.views || 0) - (a.views || 0));
+    else if (so === 'name') list.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+    else list.sort((a, b) => (b.at || 0) - (a.at || 0));
+    $('#myFiles').innerHTML = list.length
+      ? `<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">${list.map(r => fileCard(r, true, termsOf(q), 'grid')).join('')}</div>`
+      : `<p class="text-sm text-slate-500">${q ? 'Hech narsa topilmadi.' : 'Hali fayl yuklanmagan.'}</p>`;
+    $$('#myFiles [data-del]').forEach(b => b.addEventListener('click', async () => {
+      if (!confirm("Bu fayl o'chirilsinmi?")) return;
+      await deleteFile(b.dataset.del); renderMine(); renderTop(); renderSaved(); toast("Fayl o'chirildi!");
     }));
-    icons();
+    updateSel(); icons();
   }
 
+  /* ===== Fayl yuklash: ko'p fayl, jarayon chizig'i, sahifaga tashlash ===== */
   const upFile = $('#upFile'), upStatus = $('#upStatus'), dz = $('#dropZone');
-  upFile.addEventListener('change', () => {
-    $('#upFileName').textContent = upFile.files[0] ? upFile.files[0].name : 'Faylni tanlash uchun bosing yoki shu yerga tashlang';
-  });
+  const DZ_TXT = "Fayllarni tanlash uchun bosing yoki shu yerga tashlang (bir nechta mumkin, har biri 50 MB gacha)";
+  function upLabel() {
+    const fs = [...upFile.files];
+    $('#upFileName').textContent = !fs.length ? DZ_TXT : fs.length === 1
+      ? fs[0].name + ' (' + fmtSize(fs[0].size) + ')'
+      : fs.length + ' ta fayl tanlandi (' + fmtSize(fs.reduce((n, f) => n + f.size, 0)) + ')';
+  }
+  upFile.addEventListener('change', upLabel);
+  function setFiles(fl) { try { upFile.files = fl; } catch (e) { return; } upLabel(); }
   ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('border-brand'); }));
   ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('border-brand'); }));
-  dz.addEventListener('drop', e => {
-    if (e.dataTransfer.files[0]) { upFile.files = e.dataTransfer.files; upFile.dispatchEvent(new Event('change')); }
+
+  let dragDepth = 0;
+  const ov = $('#dropOverlay');
+  const hasFiles = e => !!(e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files'));
+  window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; dragDepth++; ov.classList.remove('hidden'); });
+  window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) ov.classList.add('hidden'); });
+  window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('drop', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dragDepth = 0; ov.classList.add('hidden');
+    if (!currentUser()) { refreshAuth(); return; }
+    if (e.dataTransfer.files.length) {
+      setFiles(e.dataTransfer.files);
+      $('#yuklash').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast('Fayllar tanlandi. «Yuklash» tugmasini bosing.', 'info');
+    }
   });
 
   $('#uploadForm').addEventListener('submit', async e => {
     e.preventDefault();
     if (!currentUser()) { refreshAuth(); return; }
-    const f = upFile.files[0];
-    if (!f) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
+    const files = [...upFile.files];
+    if (!files.length) { upStatus.textContent = 'Iltimos, fayl tanlang.'; return; }
+    const big = files.filter(f => f.size > MAX);
+    if (big.length) {
+      upStatus.textContent = 'Hajmi 50 MB dan katta fayl: ' + big.map(f => f.name).join(', ') + '. Uni olib tashlab qayta tanlang.';
+      toast('Fayl juda katta!', true); return;
+    }
     const vis = getVis(); if (!vis.length) { upStatus.textContent = 'Kamida bitta toifani tanlang.'; return; }
-        upStatus.textContent = 'Yuklanmoqda...';
-    try {
-      await uploadFile(f, vis);
-      upStatus.textContent = 'Fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
-      e.target.reset(); $('#upFileName').textContent = 'Faylni tanlash uchun bosing yoki shu yerga tashlang';
-      renderMine(); renderTop(); toast('Yuklandi!');
-    } catch (err) {
-      toast('Xatolik: fayl yuklanmadi!', true);
-      upStatus.textContent = 'Xatolik: fayl yuklanmadi. U serverdagi hajm chegarasidan katta yoki xotira to\'lgan bo\'lishi mumkin.';
+    const btn = e.target.querySelector('button[type="submit"]'); if (btn.disabled) return;
+    btn.disabled = true;
+    const title0 = $('#upTitle').value.trim(), descr = $('#upDesc').value.trim();
+    const bar = $('#upBar'), barIn = $('#upBarIn');
+    bar.classList.remove('hidden'); barIn.style.width = '0%';
+    let ok = 0; const fail = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i], base = f.name.replace(/\.[^.]+$/, '');
+      upStatus.textContent = 'Yuklanmoqda: ' + (i + 1) + ' / ' + files.length + ' — ' + f.name;
+      const title = files.length === 1 ? (title0 || base) : (title0 ? title0 + ' ' + (i + 1) : base);
+      try { await uploadFile(f, vis, { title: title.slice(0, 100), descr }); ok++; } catch (err) { fail.push(f.name); }
+      barIn.style.width = Math.round((i + 1) / files.length * 100) + '%';
+    }
+    btn.disabled = false;
+    setTimeout(() => bar.classList.add('hidden'), 1200);
+    if (ok) { $('#uploadForm').reset(); upLabel(); renderMine(); renderTop(); }
+    if (fail.length) {
+      upStatus.textContent = ok + ' ta fayl yuklandi. Yuklanmadi: ' + fail.join(', ') + " (hajm chegarasi yoki xotira to'lgan bo'lishi mumkin).";
+      toast(fail.length + ' ta fayl yuklanmadi!', true);
+    } else {
+      upStatus.textContent = ok + ' ta fayl muvaffaqiyatli yuklandi! Endi uni qidiruvda topish mumkin.';
+      toast('Yuklandi!');
     }
   });
 
@@ -603,17 +726,32 @@ tailwind.config = {
     toastTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%, -150%)'; }, 2800);
   }
 
-  /* ===== Faylni ochish ===== */
-    const viewer = $('#viewer'); let viewerUrl = null;
+  /* ===== Faylni ochish (oldingi/keyingi, kattalashtirish, o'xshash fayllar) ===== */
+  const viewer = $('#viewer'); let viewerUrl = null, curId = null, navIds = [];
   function closeViewer() {
     viewer.classList.add('hidden'); viewer.classList.remove('flex');
-    $('#vBody').innerHTML = ''; $('#vFoot').innerHTML = '';
+    $('#vBody').innerHTML = ''; $('#vFoot').innerHTML = ''; curId = null;
     if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
+  }
+  const itemById = id => (String(id).startsWith('r') ? catalog : sbFiles).find(c => c.id === id);
+  function addRecent(r) {
+    const k = recKey(), a = lsGet(k, []).filter(x => x !== r.key);
+    a.unshift(r.key); lsSet(k, a.slice(0, 12));
+  }
+  function relatedOf(r) {
+    const tw = termsOf(r.title + ' ' + (r.desc || '')).filter(t => t.length >= 3);
+    return sbFiles.concat(catalog).filter(x => x.id !== r.id && canSee(x)).map(x => {
+      const hay = (x.title + ' ' + (x.desc || '')).toLowerCase();
+      let s = tw.reduce((n, t) => n + (hay.includes(t) ? 1 : 0), 0);
+      if (x.owner && x.owner === r.owner) s += 0.5;
+      if (x.kind === r.kind) s += 0.25;
+      return { x, s };
+    }).filter(o => o.s >= 0.75).sort((a, b) => b.s - a.s).slice(0, 4).map(o => o.x);
   }
   async function openFile(id) {
     if (!currentUser()) { refreshAuth(); return; }
     const remote = String(id).startsWith('r');
-    let r = (remote ? catalog : sbFiles).find(c => c.id === id);
+    let r = itemById(id);
     if (!r || !canSee(r)) { toast("Fayl topilmadi yoki ruxsat yo'q!", true); return; }
     if (remote) {
       const v = getViewers(r.key), u = currentUser();
@@ -622,11 +760,11 @@ tailwind.config = {
       const { error } = await sb.rpc('register_view', { fid: r.sid });
       if (!error) { await loadFiles(); r = sbFiles.find(c => c.id === id) || r; }
     }
-    const rawUrl = r.url || '';
-    const url = esc(rawUrl);
+    curId = id; addRecent(r);
+    const url = esc(r.url || '');
     const t = /\.pdf$/i.test(r.name) ? 'application/pdf' : /\.txt$/i.test(r.name) ? 'text/plain' : '';
     let body;
-    if (r.kind === 'img') body = `<img src="${url}" alt="${esc(r.title)}" class="max-h-[65vh] mx-auto rounded-lg">`;
+    if (r.kind === 'img') body = `<img id="vImg" src="${url}" alt="${esc(r.title)}" title="Kattalashtirish uchun bosing" style="max-height:65vh;cursor:zoom-in" class="mx-auto rounded-lg">`;
     else if (r.kind === 'vid') body = `<video src="${url}" controls autoplay class="w-full max-h-[65vh] rounded-lg bg-black"></video>`;
     else if (t === 'application/pdf' || t.startsWith('text/')) body = `<iframe src="${url}" title="${esc(r.title)}" class="w-full h-[65vh] rounded-lg border border-slate-200 dark:border-slate-700 bg-white"></iframe>`;
     else body = `<div class="py-12 text-center text-slate-500"><div class="w-14 h-14 mx-auto rounded-xl bg-brand/10 text-brand grid place-items-center"><i data-lucide="file" class="w-7 h-7"></i></div><p class="mt-4 text-sm">Bu turdagi faylni brauzerda ochib bo'lmaydi. Uni yuklab olib oching.</p></div>`;
@@ -635,22 +773,73 @@ tailwind.config = {
     $('#vBody').innerHTML = body
       + (r.ownerName ? `<p class="mt-4 text-sm text-slate-500">👤 Yuklagan: <strong class="text-slate-800 dark:text-slate-100">${esc(r.ownerName)}</strong>${dmBtn(r)}</p>` : '')
       + (r.desc ? `<p class="mt-3 text-base font-semibold leading-snug px-4 py-3 rounded-xl border-l-4 border-brand bg-gradient-to-r from-brand/10 to-accent/10 text-brand dark:text-accent">✨ ${esc(r.desc)}</p>` : '');
-    $('#vFoot').innerHTML = `<a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>`;
+    const i = navIds.indexOf(id), can = i >= 0 && navIds.length > 1;
+    $('#vPos').textContent = can ? (i + 1) + ' / ' + navIds.length : '';
+    $('#vPrev').disabled = $('#vNext').disabled = !can;
+    const rel = relatedOf(r);
+    $('#vFoot').innerHTML = `<div class="flex flex-wrap items-center gap-2"><a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>${favBtn(r, 'px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600')}</div>`
+      + (rel.length ? `<div class="mt-5"><div class="text-sm font-bold mb-2">O'xshash fayllar</div><div class="grid gap-2 sm:grid-cols-2">${rel.map(x => `<div class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700">${thumbHTML(x, false)}<div class="min-w-0"><div data-open="${esc(x.id)}" class="text-sm font-semibold truncate cursor-pointer hover:text-brand">${esc(x.title)}</div><div class="text-xs text-slate-500">${kindLabel(x.kind)} • ${fmtSize(x.size)}</div></div></div>`).join('')}</div></div>` : '');
     viewer.classList.remove('hidden'); viewer.classList.add('flex');
-    icons(); renderTop(); renderMine();
+    icons(); renderTop(); renderMine(); renderSaved();
+  }
+  function stepView(d) {
+    if (!curId || navIds.length < 2) return;
+    const i = navIds.indexOf(curId); if (i < 0) return;
+    openFile(navIds[(i + d + navIds.length) % navIds.length]);
   }
   $('#vClose').addEventListener('click', closeViewer);
+  $('#vPrev').addEventListener('click', () => stepView(-1));
+  $('#vNext').addEventListener('click', () => stepView(1));
   viewer.addEventListener('click', e => { if (e.target === viewer) closeViewer(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !viewer.classList.contains('hidden')) closeViewer(); });
+  $('#vBody').addEventListener('click', e => {
+    const im = e.target.closest('#vImg'); if (!im) return;
+    const z = im.dataset.z === '1'; im.dataset.z = z ? '' : '1';
+    im.style.maxHeight = z ? '65vh' : 'none'; im.style.width = z ? '' : '100%'; im.style.cursor = z ? 'zoom-in' : 'zoom-out';
+  });
+  document.addEventListener('keydown', e => {
+    if (viewer.classList.contains('hidden')) return;
+    if (e.key === 'Escape') closeViewer();
+    else if (e.key === 'ArrowRight') stepView(1);
+    else if (e.key === 'ArrowLeft') stepView(-1);
+  });
+
+  /* ===== Saqlanganlar va yaqinda ko'rilganlar ===== */
+  function toggleFav(id) {
+    const r = itemById(id); if (!r) return;
+    const k = favKey(), a = lsGet(k, []), has = a.includes(r.key);
+    lsSet(k, has ? a.filter(x => x !== r.key) : [r.key].concat(a).slice(0, 200));
+    $$('[data-fav]').forEach(b => {
+      if (b.dataset.fav !== id) return;
+      b.textContent = has ? '♡' : '♥'; b.classList.toggle('text-red-500', !has); b.classList.toggle('text-slate-400', has);
+    });
+    toast(has ? 'Saqlanganlardan olib tashlandi' : 'Saqlandi!', has ? 'info' : undefined);
+    renderSaved();
+  }
+  async function renderSaved() {
+    const all = await allItems(), byKey = k => all.find(r => r.key === k);
+    const fl = lsGet(favKey(), []).map(byKey).filter(Boolean), rl = lsGet(recKey(), []).map(byKey).filter(Boolean);
+    const empty = t => `<p class="text-sm text-slate-500 sm:col-span-2 md:col-span-3">${t}</p>`;
+    $('#savedList').innerHTML = fl.length ? fl.map(r => fileCard(r, false, [], 'grid')).join('') : empty("Hali saqlangan fayl yo'q. Fayl kartasidagi ♡ tugmasini bosing.");
+    $('#recentList').innerHTML = rl.length ? rl.map(r => fileCard(r, false, [], 'grid')).join('') : empty("Hali fayl ko'rilmagan.");
+    $('#recentClear').classList.toggle('hidden', !rl.length);
+    icons();
+  }
   document.addEventListener('click', e => {
+    const f = e.target.closest('[data-fav]');
+    if (f) { e.preventDefault(); toggleFav(f.dataset.fav); return; }
     const o = e.target.closest('[data-open]');
-    if (o) { e.preventDefault(); openFile(o.dataset.open); return; }
+    if (o) {
+      e.preventDefault();
+      const box = o.closest('#results,#topList,#myFiles,#savedList,#recentList');
+      if (box) navIds = [...new Set($$('[data-open]', box).map(x => x.dataset.open))];
+      openFile(o.dataset.open); return;
+    }
     const d = e.target.closest('[data-dl]'); if (d) { e.preventDefault(); downloadTo(d); }
   });
 
   /* ===== Top fayllar ===== */
   async function renderTop() {
-    let list = await allItems();
+    let list = await allItems(); updateStats(list);
     const box = $('#topList');
     if (!list.length) {
       box.innerHTML = `<div class="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500">Hali fayl yuklanmagan. Birinchi bo'lib fayl yuklang!</div>`;
@@ -660,7 +849,7 @@ tailwind.config = {
     const medal = ['bg-amber-400 text-white', 'bg-slate-400 text-white', 'bg-orange-400 text-white'];
     box.innerHTML = list.slice(0, 10).map((r, i) => {
       const thumb = r.kind === 'img'
-        ? `<img src="${esc(r.url || '')}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">`
+        ? `<img src="${esc(r.url || '')}" alt="" loading="lazy" class="w-14 h-14 rounded-xl object-cover shrink-0">`
         : `<div class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-brand/10 text-brand"><i data-lucide="${r.kind === 'vid' ? 'play-circle' : 'file-text'}" class="w-6 h-6"></i></div>`;
       const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
       return `<div class="fade-up flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -784,11 +973,11 @@ tailwind.config = {
     }
     sbFiles = rows;
   }
-  async function uploadFile(f, vis) {
+  async function uploadFile(f, vis, opts) {
     const path = me.id + '/' + Date.now() + '-' + f.name.replace(/[^\w.\-]+/g, '_');
     let r = await sb.storage.from('files').upload(path, f, { contentType: f.type || 'application/octet-stream' });
     if (r.error) throw r.error;
-    r = await sb.from('files').insert({ owner: me.id, owner_name: me.username, title: $('#upTitle').value.trim(), descr: $('#upDesc').value.trim(), name: f.name, size: f.size, kind: typeOf(f), path, tier: me.role, vis });
+    r = await sb.from('files').insert({ owner: me.id, owner_name: me.username, title: opts.title, descr: opts.descr, name: f.name, size: f.size, kind: typeOf(f), path, tier: me.role, vis });
     if (r.error) { await sb.storage.from('files').remove([path]); throw r.error; }
     await loadFiles();
   }
@@ -813,7 +1002,7 @@ tailwind.config = {
   const show = id => { const m = $(id); m.classList.remove('hidden'); m.classList.add('flex'); };
   const hide = id => { const m = $(id); m.classList.add('hidden'); m.classList.remove('flex'); };
   const avatarHTML = (u, cls) => u && u.avatar
-    ? `<img src="${u.avatar}" class="${cls} rounded-full object-cover shrink-0" alt="">`
+    ? `<img src="${esc(u.avatar)}" class="${cls} rounded-full object-cover shrink-0" alt="">`
     : `<span class="${cls} rounded-full bg-brand text-white grid place-items-center font-bold shrink-0">${esc(((u && u.username) || '?')[0].toUpperCase())}</span>`;
   function canSee(r) {
     const me_ = myRole(); if (!me_) return false;
@@ -883,7 +1072,7 @@ tailwind.config = {
     if (!isAdmin()) return;
     await loadProfiles(); await loadFiles();
     const ids = Object.keys(profiles);
-    $('#adStats').textContent = `Foydalanuvchilar: ${ids.length} • Fayllar: ${sbFiles.length} • Xabarlar: ${msgs.length}`;
+    $('#adStats').textContent = `Foydalanuvchilar: ${ids.length} • Fayllar: ${sbFiles.length} • Xabarlar: ${msgs.length}`; adminCharts(ids);
     $('#adUsers').innerHTML = ids.map(k => {
       const u = profiles[k];
       return `<div class="${rowCls}">${avatarHTML(u, 'w-8 h-8 text-xs')}<span class="font-semibold truncate flex-1">${esc(u.username)}</span>
@@ -1002,7 +1191,7 @@ tailwind.config = {
           if (p && p.new && !dms.some(x => x.id === p.new.id)) { dms.push(p.new); dmIncoming(p.new); }
         }).subscribe();
     } catch (e) { dmChan = {}; }
-    dmTimer = setInterval(dmPoll, 15000);
+    dmTimer = setInterval(() => { if (!document.hidden) dmPoll(); }, 15000);
   }
   function dmStop() {
     if (dmChan && dmChan.unsubscribe) { try { sb.removeChannel(dmChan); } catch (e) {} }
@@ -1131,16 +1320,199 @@ tailwind.config = {
   /* ===== Top fayllar va Fayllarim: tugma bosilganda ochiladi ===== */
   document.addEventListener('click', e => {
     const c = e.target.closest('[data-close]'); if (c) { $(c.dataset.close).classList.add('hidden'); return; }
-    const a = e.target.closest('a[href="#top"], a[href="#mine"]'); if (!a) return;
+    const a = e.target.closest('a[href="#top"], a[href="#mine"], a[href="#saved"]'); if (!a) return;
     e.preventDefault(); const sec = $(a.getAttribute('href'));
     if (!sec.classList.contains('hidden')) { sec.classList.add('hidden'); return; }
-    sec.classList.remove('hidden'); renderTop(); renderMine(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    sec.classList.remove('hidden'); renderTop(); renderMine(); renderSaved(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  /* ===== Qo'shimcha qulayliklar ===== */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    ['#profileModal', '#adminModal', '#helpModal'].forEach(id => { if (!$(id).classList.contains('hidden')) hide(id); });
+    if (!$('#tierModal').classList.contains('hidden') && myRole()) hide('#tierModal');
+    if (chatOpen()) { const p = $('#chatPanel'); p.classList.add('hidden'); p.classList.remove('flex'); }
+  });
+  ['#authModal', '#tierModal', '#profileModal', '#adminModal', '#helpModal', '#viewer'].forEach(id => { const m = $(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
+  $('#yr').textContent = new Date().getFullYear();
+  $('#aEye').addEventListener('click', () => {
+    const i = $('#aPass'), show_ = i.type === 'password';
+    i.type = show_ ? 'text' : 'password';
+    $('#aEye').textContent = show_ ? 'Yashir' : "Ko'rsat";
+    $('#aEye').setAttribute('aria-label', show_ ? 'Parolni yashirish' : "Parolni ko'rsatish");
+  });
+  const toTop = $('#toTop');
+  window.addEventListener('scroll', () => toTop.classList.toggle('hidden', window.scrollY < 600), { passive: true });
+  toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  window.addEventListener('offline', () => toast('Internet aloqasi uzildi', true));
+  window.addEventListener('online', () => toast('Internet aloqasi tiklandi!'));
+
+  /* ===== Qidiruv takliflari, jonli qidiruv, ko'rinish, ulashish ===== */
+  const sugg = $('#sugg'); let suggItems = [], suggIdx = -1, liveT = null;
+  function hideSugg() { sugg.classList.add('hidden'); suggIdx = -1; }
+  function paintSugg() { $$('[data-si]', sugg).forEach((el, i) => el.classList.toggle('bg-brand/10', i === suggIdx)); }
+  async function showSugg() {
+    const v = input.value.trim(), items = [];
+    if (!v) getHistory().forEach(t => items.push({ k: 'h', t }));
+    else if (currentUser()) {
+      const lv = v.toLowerCase(), seen = new Set();
+      const all = await allItems();
+      all.forEach(r => {
+        const key = String(r.title).toLowerCase();
+        if (items.length < 6 && key.includes(lv) && !seen.has(key)) { seen.add(key); items.push({ k: 's', t: r.title }); }
+      });
+      getHistory().filter(h => String(h).toLowerCase().includes(lv) && !seen.has(String(h).toLowerCase())).slice(0, 3).forEach(h => items.push({ k: 'h', t: h }));
+    }
+    if (input.value.trim() !== v) return;
+    suggItems = items; suggIdx = -1;
+    if (!items.length) { sugg.innerHTML = ''; hideSugg(); return; }
+    const tm = termsOf(v);
+    sugg.innerHTML = items.map((it, i) => `<div role="option" data-si="${i}" class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-brand/10 text-sm"><span class="shrink-0">${it.k === 'h' ? '🕘' : '🔎'}</span><span class="truncate flex-1">${hl(it.t, tm)}</span>${!v ? `<button type="button" data-sdel="${i}" aria-label="Tarixdan o'chirish" class="shrink-0 w-6 h-6 rounded text-slate-400 hover:text-red-500 leading-none">×</button>` : ''}</div>`).join('')
+      + (!v ? '<button type="button" data-sclear class="w-full text-left px-4 py-2 text-xs text-slate-500 hover:text-red-500 border-t border-slate-100 dark:border-slate-800">Qidiruv tarixini tozalash</button>' : '');
+    sugg.classList.remove('hidden');
+  }
+  function pickSugg(i) {
+    const it = suggItems[i]; if (!it) return;
+    input.value = it.t; clearBtn.classList.remove('hidden'); hideSugg(); doSearch(it.t);
+  }
+  input.addEventListener('focus', showSugg);
+  input.addEventListener('input', () => {
+    showSugg(); clearTimeout(liveT);
+    const v = input.value.trim();
+    if (!currentUser()) return;
+    if (v.length >= 2) liveT = setTimeout(() => { if (input.value.trim() === v) doSearch(v, { live: true }); }, 400);
+    else if (!v) { currentQuery = ''; section.classList.add('hidden'); currentData = null; updateTabCounts(null); setHash(); }
+  });
+  input.addEventListener('keydown', e => {
+    if (sugg.classList.contains('hidden') || !suggItems.length) return;
+    const n = suggItems.length;
+    if (e.key === 'ArrowDown') { e.preventDefault(); suggIdx = (suggIdx + 1) % n; paintSugg(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); suggIdx = (suggIdx - 1 + n) % n; paintSugg(); }
+    else if (e.key === 'Enter' && suggIdx >= 0) { e.preventDefault(); pickSugg(suggIdx); }
+    else if (e.key === 'Escape') hideSugg();
+  });
+  sugg.addEventListener('mousedown', e => e.preventDefault());
+  sugg.addEventListener('click', e => {
+    const del = e.target.closest('[data-sdel]');
+    if (del) { const it = suggItems[Number(del.dataset.sdel)]; if (it) lsSet('hist', getHistory().filter(x => x !== it.t)); showSugg(); return; }
+    if (e.target.closest('[data-sclear]')) { lsSet('hist', []); hideSugg(); return; }
+    const it = e.target.closest('[data-si]'); if (it) pickSugg(Number(it.dataset.si));
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('#searchForm')) hideSugg(); });
+  clearBtn.addEventListener('click', () => { currentQuery = ''; updateTabCounts(null); setHash(); hideSugg(); });
+  ['#fTier', '#fSort'].forEach(i => $(i).addEventListener('change', () => { shownN = PAGE; if (currentData) render(); }));
+
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+    try {
+      const a = document.createElement('textarea'); a.value = t; a.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(a); a.select(); const ok = document.execCommand('copy'); a.remove(); return ok;
+    } catch (e) { return false; }
+  }
+  document.addEventListener('click', e => {
+    const v = e.target.closest('[data-view]');
+    if (v) { viewMode = v.dataset.view === 'list' ? 'list' : 'grid'; lsSet('view', viewMode); render(); return; }
+    if (e.target.closest('[data-more]')) { shownN += PAGE; render(); return; }
+    if (e.target.closest('[data-share]')) { copyText(location.href).then(ok => toast(ok ? 'Qidiruv havolasi nusxalandi!' : "Nusxalab bo'lmadi", !ok)); }
+  });
+  function bootFromHash() {
+    const h = location.hash.slice(1);
+    if (!/(^|&)(q|cat)=/.test(h)) return;
+    const p = new URLSearchParams(h), q = (p.get('q') || '').slice(0, 120), cat = p.get('cat') || 'all';
+    if (!['all', 'img', 'vid', 'doc'].includes(cat)) return;
+    input.value = q; clearBtn.classList.toggle('hidden', !q); setTab(cat);
+    if (currentUser() && q) doSearch(q, { live: true });
+  }
+
+  /* ===== Bosh sahifa statistikasi ===== */
+  function countTo(el, to) {
+    if (!el) return;
+    const from = Number(el.dataset.v || 0); el.dataset.v = to;
+    if (from === to) { el.textContent = to.toLocaleString(); return; }
+    const t0 = performance.now(), dur = 700;
+    (function tick(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(from + (to - from) * p).toLocaleString();
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  function updateStats(list) {
+    const box = $('#heroStats'); if (!box) return;
+    if (!currentUser()) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    countTo($('#stF'), list.length);
+    countTo($('#stU'), Object.keys(profiles).length);
+    countTo($('#stV'), list.reduce((n, r) => n + (r.views || 0), 0));
+  }
+
+  /* ===== Fayllarim, saqlanganlar ===== */
+  $('#mySearch').addEventListener('input', () => renderMine());
+  $('#mySort').addEventListener('change', () => renderMine());
+  $('#myFiles').addEventListener('change', e => { if (e.target.matches('[data-sel]')) updateSel(); });
+  $('#myDelSel').addEventListener('click', async () => {
+    const ids = selectedIds(); if (!ids.length) return;
+    if (!confirm(ids.length + " ta fayl o'chirilsinmi?")) return;
+    try { await deleteMany(ids); } catch (e) { toast("O'chirishda xatolik", true); return; }
+    renderMine(); renderTop(); renderSaved(); toast(ids.length + " ta fayl o'chirildi!");
+  });
+  $('#recentClear').addEventListener('click', () => { lsSet(recKey(), []); renderSaved(); toast('Tarix tozalandi!'); });
+
+  /* ===== Boshqaruv paneli: statistika ===== */
+  function barRows(title, rows) {
+    const max = Math.max(1, ...rows.map(r => r[1]));
+    return `<div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3"><div class="text-sm font-bold mb-2">${title}</div>`
+      + rows.map(([n, v]) => `<div class="flex items-center gap-2 text-xs mb-1.5"><span class="w-24 truncate">${esc(n)}</span><div class="flex-1 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden"><div class="h-full bg-brand rounded-full" style="width:${v / max * 100}%"></div></div><span class="w-8 text-right font-semibold">${v}</span></div>`).join('') + '</div>';
+  }
+  function adminCharts(ids) {
+    const box = $('#adChart'); if (!box) return;
+    const roles = {}; ids.forEach(k => { const r = profiles[k].role || 'toifasiz'; roles[r] = (roles[r] || 0) + 1; });
+    const kinds = { Rasm: 0, Video: 0, Hujjat: 0 }; sbFiles.forEach(r => { kinds[kindLabel(r.kind)]++; });
+    const own = {}; sbFiles.forEach(r => { const n = r.ownerName || '?'; own[n] = (own[n] || 0) + 1; });
+    const top = Object.entries(own).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+      const t0 = d.getTime();
+      days.push([String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0'), sbFiles.filter(r => r.at >= t0 && r.at < t0 + 864e5).length]);
+    }
+    box.innerHTML = barRows("Foydalanuvchilar toifasi", Object.entries(roles)) + barRows('Fayl turlari', Object.entries(kinds))
+      + barRows('Eng faol yuklovchilar', top.length ? top : [['—', 0]]) + barRows("So'nggi 7 kun: yuklashlar", days);
+  }
+
+  /* ===== Tezkor tugmalar yordami ===== */
+  $('#helpBtn').addEventListener('click', () => show('#helpModal'));
+  $('#hClose').addEventListener('click', () => hide('#helpModal'));
+  $('#helpModal').addEventListener('click', e => { if (e.target.id === 'helpModal') hide('#helpModal'); });
+  document.addEventListener('keydown', e => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (/INPUT|TEXTAREA|SELECT/.test(tag) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === '?') { e.preventDefault(); show('#helpModal'); }
+    else if (e.key === 't' || e.key === 'T') $('#themeBtn').click();
+  });
+
+  /* ===== Chat: emoji ===== */
+  const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🔥', '🎉', '😢', '😮', '❤️', '👋', '✅'];
+  [['#chatForm', '#chatIn'], ['#dmForm', '#dmIn']].forEach(([f, i]) => {
+    const form = $(f), inp = $(i); form.classList.add('relative');
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = '😊'; btn.setAttribute('aria-label', 'Emoji'); btn.className = 'px-2 text-lg rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800';
+    const bar = document.createElement('div');
+    bar.className = 'hidden absolute bottom-full left-2 mb-1 flex-wrap gap-1 p-2 w-60 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg';
+    EMOJIS.forEach(em => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = em; b.className = 'text-xl p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
+      b.addEventListener('click', () => { if (!inp.disabled) { inp.value += em; inp.focus(); } });
+      bar.appendChild(b);
+    });
+    btn.addEventListener('click', () => { const on = bar.classList.contains('hidden'); bar.classList.toggle('hidden', !on); bar.classList.toggle('flex', on); });
+    form.addEventListener('submit', () => { bar.classList.add('hidden'); bar.classList.remove('flex'); });
+    form.insertBefore(btn, form.lastElementChild); form.appendChild(bar);
   });
 
   /* ===== Ishga tushirish ===== */
   (async () => {
     try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); await loadMsgs(); } } catch (e) { console.error(e); }
-    refreshAuth(); renderMine(); renderTop(); icons();
+    refreshAuth(); renderMine(); renderTop(); renderSaved(); icons(); bootFromHash();
   })();
 })();
 </script>
