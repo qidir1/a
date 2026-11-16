@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script>try{if(localStorage.getItem("theme")==="light")document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");}catch(e){document.documentElement.classList.add("dark");}</script>
+<script>try{var t=localStorage.getItem("theme");var d=t?t!=="light":!window.matchMedia("(prefers-color-scheme: light)").matches;document.documentElement.classList.toggle("dark",d);}catch(e){document.documentElement.classList.add("dark");}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -43,6 +43,11 @@ tailwind.config = {
   .pill-active { background: #2563EB !important; color: #fff !important; border-color: #2563EB !important; }
   html { color-scheme: light; } html.dark { color-scheme: dark; }
   body { overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.45); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.7); background-clip: padding-box; border: 2px solid transparent; }
+  @supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; } }
   section[id], footer[id] { scroll-margin-top: 84px; }
   .no-anim .fade-up { animation: none !important; }
   kbd { font-family: inherit; }
@@ -52,9 +57,10 @@ tailwind.config = {
 </head>
 <body class="bg-lightbg text-slate-800 dark:bg-darkbg dark:text-slate-200 transition-colors duration-300 antialiased">
 <noscript><div class="p-4 text-center bg-red-600 text-white text-sm font-semibold">Saytdan foydalanish uchun brauzerda JavaScript yoqilgan bo'lishi kerak.</div></noscript>
+<a href="#asosiy" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-brand focus:text-white focus:font-semibold">Asosiy tarkibga o'tish</a>
 
 <!-- HEADER -->
-<header class="sticky top-0 z-40 backdrop-blur bg-lightbg/80 dark:bg-darkbg/80 border-b border-slate-200 dark:border-slate-800">
+<header class="sticky top-0 z-40 transition-shadow backdrop-blur bg-lightbg/80 dark:bg-darkbg/80 border-b border-slate-200 dark:border-slate-800">
   <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
     <a href="#bosh" class="flex items-center gap-2 font-extrabold text-lg shrink-0">
       <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-accent grid place-items-center text-white"><i data-lucide="search" class="w-5 h-5"></i></span>
@@ -91,7 +97,7 @@ tailwind.config = {
   </div>
 </header>
 
-<main>
+<main id="asosiy" tabindex="-1" class="outline-none">
 <!-- HERO -->
 <section id="bosh" class="hero-bg">
   <div class="max-w-4xl mx-auto px-4 pt-14 pb-8 sm:pt-20 text-center">
@@ -126,6 +132,7 @@ tailwind.config = {
       <select id="fTier" aria-label="Toifa" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Barcha toifalar</option><option>NORMAL</option><option>PREMIUM</option><option>PRIV</option></select>
       <select id="fSort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Saralash: mosligi bo'yicha</option><option value="new">Eng yangilari</option><option value="views">Eng ko'p ko'rilgan</option></select>
     </div>
+    <div id="quickTags" class="mt-4 flex flex-wrap justify-center items-center gap-2 text-xs sm:text-sm font-medium"><span class="text-slate-500">Mashhur:</span><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">🌤 Ob-havo</button><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">💻 Dasturlash</button><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">📰 Yangiliklar</button><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">📚 Darslik</button><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">📊 Prezentatsiya</button><button type="button" class="tag px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand hover:text-brand transition">🏙 Toshkent</button></div>
   </div>
 </section>
 
@@ -188,6 +195,7 @@ tailwind.config = {
         <span id="upFileName" class="text-sm text-slate-500">Fayllarni tanlash uchun bosing yoki shu yerga tashlang (bir nechta mumkin, har biri 50 MB gacha)</span>
         <input id="upFile" type="file" multiple class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
       </label>
+      <div id="upPrev" class="hidden flex-wrap items-center gap-2" aria-label="Tanlangan rasmlar"></div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="submit" class="px-5 py-2 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Yuklash</button>
         <span id="upStatus" class="text-sm text-slate-500" aria-live="polite"></span>
@@ -204,6 +212,7 @@ tailwind.config = {
     <div class="flex flex-wrap gap-2 mb-3">
       <input id="mySearch" type="search" maxlength="60" placeholder="Fayllarim ichidan qidirish..." class="flex-1 min-w-[10rem] px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       <select id="mySort" aria-label="Saralash" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="new">Yangi avval</option><option value="old">Eski avval</option><option value="views">Ko'p ko'rilgan</option><option value="name">Nomi bo'yicha</option></select>
+      <button id="mySelAll" type="button" class="hidden px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-brand">Hammasini tanlash</button>
       <button id="myDelSel" type="button" class="hidden px-3 py-2 rounded-xl border border-red-500 text-red-500 text-sm font-semibold hover:bg-red-500/10"></button>
     </div>
     <div id="myFiles" class="space-y-2"></div>
@@ -338,6 +347,7 @@ tailwind.config = {
     <div class="flex justify-between items-center"><h2 class="text-lg font-bold">Tezkor tugmalar</h2><button id="hClose" type="button" aria-label="Yopish" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
     <ul class="mt-4 space-y-2.5 text-sm">
       <li class="flex items-center justify-between"><span>Qidiruvga o'tish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">/</kbd></li>
+      <li class="flex items-center justify-between"><span>Qidiruvga o'tish (muqobil)</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">Ctrl + K</kbd></li>
       <li class="flex items-center justify-between"><span>Takliflar ichida yurish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">↑ ↓ Enter</kbd></li>
       <li class="flex items-center justify-between"><span>Fayllar orasida o'tish</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">← →</kbd></li>
       <li class="flex items-center justify-between"><span>Tungi / kunduzgi rejim</span><kbd class="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-xs">T</kbd></li>
@@ -364,6 +374,8 @@ tailwind.config = {
     <form id="authForm" class="mt-4 grid gap-3">
       <input id="aUser" type="text" required maxlength="20" autocomplete="username" placeholder="Foydalanuvchi nomi (lotin harfi, raqam)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
       <div class="relative"><input id="aPass" type="password" required minlength="6" maxlength="64" autocomplete="current-password" placeholder="Parol (kamida 6 ta belgi)" class="w-full pl-4 pr-20 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button id="aEye" type="button" aria-label="Parolni ko'rsatish" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold px-2 py-1 rounded-lg text-slate-500 hover:text-brand">Ko'rsat</button></div>
+      <div id="aStrength" class="hidden -mt-1"><div class="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div id="aStrBar" class="h-full w-0 transition-all duration-300"></div></div><p id="aStrTxt" class="text-xs mt-1 text-slate-500"></p></div>
+      <p id="aCaps" class="hidden text-xs font-semibold text-amber-500">⚠ Caps Lock yoqilgan</p>
       <p id="aErr" class="text-sm text-red-500 min-h-[1.25rem]" aria-live="polite"></p>
       <button id="aSubmit" type="submit" class="py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Kirish</button>
     </form>
@@ -391,13 +403,14 @@ tailwind.config = {
 (function () {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const linkify = t => t.replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer" class="underline break-all">' + u + '</a>');
   const icons = () => { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   /* Theme */
   const root = document.documentElement;
   const saved = (() => { try { return localStorage.getItem('theme'); } catch (e) { return null; } })();
-  if (saved === 'light') root.classList.remove('dark'); else root.classList.add('dark');
+  if (saved) root.classList.toggle('dark', saved !== 'light');
   $('#themeBtn').addEventListener('click', () => {
     root.classList.toggle('dark');
     try { localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
@@ -420,7 +433,8 @@ tailwind.config = {
   /* "/" shortcut */
   document.addEventListener('keydown', e => {
     const tag = (document.activeElement && document.activeElement.tagName) || '';
-    if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+    const ck = (e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'k';
+    if (ck || (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA')) {
       e.preventDefault(); input.focus(); input.select();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -489,6 +503,7 @@ tailwind.config = {
     if (!currentUser()) { refreshAuth(); return; }
     const q = (raw || '').trim();
     currentQuery = q; shownN = PAGE; animate = !opts.live;
+    document.title = q ? '«' + q + '» — 1 Qidiruv' : '1 Qidiruv — Barchasi bitta qidiruvda';
     if (!opts.live) { pushHistory(q); hideSugg(); }
     setHash();
     section.classList.remove('hidden');
@@ -538,7 +553,7 @@ tailwind.config = {
     updateTabCounts(d);
     const vb = (m, label) => `<button type="button" data-view="${m}" class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition ${viewMode === m ? 'pill-active' : 'border-slate-300 dark:border-slate-600 hover:border-brand'}">${label}</button>`;
     meta.innerHTML = `<div class="flex flex-wrap items-center gap-2"><span>${currentQuery ? `<strong>«${esc(currentQuery)}»</strong> bo'yicha natijalar` : '<strong>Barcha fayllar</strong>'} • Bo'lim: ${names[currentCat] || ''} • ${list.length} ta fayl</span>
-      <span class="ml-auto inline-flex flex-wrap items-center gap-2">${vb('grid', '▦ Katak')}${vb('list', '☰ Ro\'yxat')}<button type="button" data-share class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-semibold hover:border-brand transition">🔗 Ulashish</button></span></div>`;
+      <span class="ml-auto inline-flex flex-wrap items-center gap-2">${vb('grid', '▦ Katak')}${vb('list', '☰ Ro\'yxat')}${(currentCat !== 'all' || $('#fTier').value || $('#fSort').value) ? '<button type="button" data-reset class="px-2.5 py-1.5 rounded-lg border border-red-400 text-red-500 text-xs font-semibold hover:bg-red-500/10 transition">✕ Filtrlarni tozalash</button>' : ''}<button type="button" data-share class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-semibold hover:border-brand transition">🔗 Ulashish</button></span></div>`;
     let html = (currentCat === 'all' ? usersHTML(d.users || []) : '') + uploadsHTML(list.slice(0, shownN), list.length, terms);
     if (!html) {
       html = `<div class="fade-up p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
@@ -556,6 +571,13 @@ tailwind.config = {
   const MAX = 50 * 1024 * 1024;
   const typeOf = f => f.type.startsWith('image/') ? 'img' : f.type.startsWith('video/') ? 'vid' : 'doc';
   const fmtSize = b => !b ? '—' : b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  const timeAgo = ts => {
+    if (!ts) return ''; const sec = Math.max(0, (Date.now() - ts) / 1000);
+    if (sec < 60) return 'hozirgina'; const m = sec / 60; if (m < 60) return Math.floor(m) + ' daqiqa oldin';
+    const h = m / 60; if (h < 24) return Math.floor(h) + ' soat oldin';
+    const d = h / 24; if (d < 30) return Math.floor(d) + ' kun oldin';
+    return new Date(ts).toLocaleDateString();
+  };
 
   async function searchUploads(q, fresh) {
     if (fresh) await loadFiles();
@@ -586,7 +608,7 @@ tailwind.config = {
 
   function fileCard(r, withDelete, terms, mode) {
     const url = esc(r.url || ''), id = esc(r.id);
-    const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.at ? ' • ' + esc(new Date(r.at).toLocaleDateString()) : ''}`;
+    const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.at ? ' • ' + esc(timeAgo(r.at)) : ''}`;
     const owner = r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong>${dmBtn(r)}</div>` : '';
     const sel = withDelete ? `<label class="absolute top-2 left-2 z-10 w-6 h-6 rounded-md bg-white/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-600 grid place-items-center cursor-pointer"><input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600"></label>` : '';
     const del = withDelete ? `<button data-del="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : '';
@@ -603,8 +625,8 @@ tailwind.config = {
           <button data-open="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
           <a data-dl href="${url}" download="${esc(r.name)}" class="hidden sm:inline-block text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>${del}</div></div>`;
     }
-    return `<div class="fade-up relative rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-      ${sel}${thumbHTML(r, true)}
+    return `<div class="fade-up relative rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition hover:shadow-lg hover:border-brand/50">
+      ${sel}<span class="absolute top-2 right-2 z-10 text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-black/55 text-white backdrop-blur pointer-events-none">${kindLabel(r.kind)}</span>${thumbHTML(r, true)}
       <div class="p-3">
         <div class="text-sm font-semibold truncate">${hl(r.title, terms)}</div>
         <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}</div>
@@ -628,6 +650,8 @@ tailwind.config = {
   function updateSel() {
     const n = selectedIds().length, b = $('#myDelSel');
     b.classList.toggle('hidden', !n); b.textContent = "Tanlanganlarni o'chirish (" + n + ')';
+    const cs = $$('#myFiles [data-sel]'), sa = $('#mySelAll');
+    sa.classList.toggle('hidden', !cs.length); sa.textContent = cs.length && n === cs.length ? 'Tanlovni bekor qilish' : 'Hammasini tanlash';
   }
   async function deleteMany(ids) {
     const rs = ids.map(id => sbFiles.find(c => c.id === id)).filter(Boolean);
@@ -656,9 +680,21 @@ tailwind.config = {
 
   /* ===== Fayl yuklash: ko'p fayl, jarayon chizig'i, sahifaga tashlash ===== */
   const upFile = $('#upFile'), upStatus = $('#upStatus'), dz = $('#dropZone');
+  let uploading = false;
   const DZ_TXT = "Fayllarni tanlash uchun bosing yoki shu yerga tashlang (bir nechta mumkin, har biri 50 MB gacha)";
+  function upPreview(fs) {
+    const box = $('#upPrev'); if (!box) return;
+    box.querySelectorAll('img').forEach(i => URL.revokeObjectURL(i.src)); box.innerHTML = '';
+    const imgs = fs.filter(f => f.type.startsWith('image/'));
+    imgs.slice(0, 8).forEach(f => {
+      const im = document.createElement('img'); im.src = URL.createObjectURL(f); im.alt = f.name; im.title = f.name;
+      im.className = 'w-16 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700'; box.appendChild(im);
+    });
+    if (imgs.length > 8) { const m = document.createElement('span'); m.className = 'text-sm font-semibold text-slate-500'; m.textContent = '+' + (imgs.length - 8); box.appendChild(m); }
+    box.classList.toggle('hidden', !imgs.length); box.classList.toggle('flex', !!imgs.length);
+  }
   function upLabel() {
-    const fs = [...upFile.files];
+    const fs = [...upFile.files]; upPreview(fs);
     $('#upFileName').textContent = !fs.length ? DZ_TXT : fs.length === 1
       ? fs[0].name + ' (' + fmtSize(fs[0].size) + ')'
       : fs.length + ' ta fayl tanlandi (' + fmtSize(fs.reduce((n, f) => n + f.size, 0)) + ')';
@@ -697,7 +733,7 @@ tailwind.config = {
     }
     const vis = getVis(); if (!vis.length) { upStatus.textContent = 'Kamida bitta toifani tanlang.'; return; }
     const btn = e.target.querySelector('button[type="submit"]'); if (btn.disabled) return;
-    btn.disabled = true;
+    btn.disabled = true; uploading = true;
     const title0 = $('#upTitle').value.trim(), descr = $('#upDesc').value.trim();
     const bar = $('#upBar'), barIn = $('#upBarIn');
     bar.classList.remove('hidden'); barIn.style.width = '0%';
@@ -709,7 +745,7 @@ tailwind.config = {
       try { await uploadFile(f, vis, { title: title.slice(0, 100), descr }); ok++; } catch (err) { fail.push(f.name); }
       barIn.style.width = Math.round((i + 1) / files.length * 100) + '%';
     }
-    btn.disabled = false;
+    btn.disabled = false; uploading = false;
     setTimeout(() => bar.classList.add('hidden'), 1200);
     if (ok) { $('#uploadForm').reset(); upLabel(); renderMine(); renderTop(); }
     if (fail.length) {
@@ -785,7 +821,9 @@ tailwind.config = {
     const rel = relatedOf(r);
     $('#vFoot').innerHTML = `<div class="flex flex-wrap items-center gap-2"><a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>${favBtn(r, 'px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600')}</div>`
       + (rel.length ? `<div class="mt-5"><div class="text-sm font-bold mb-2">O'xshash fayllar</div><div class="grid gap-2 sm:grid-cols-2">${rel.map(x => `<div class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700">${thumbHTML(x, false)}<div class="min-w-0"><div data-open="${esc(x.id)}" class="text-sm font-semibold truncate cursor-pointer hover:text-brand">${esc(x.title)}</div><div class="text-xs text-slate-500">${kindLabel(x.kind)} • ${fmtSize(x.size)}</div></div></div>`).join('')}</div></div>` : '');
+    const wasHidden = viewer.classList.contains('hidden');
     viewer.classList.remove('hidden'); viewer.classList.add('flex');
+    if (wasHidden) { try { $('#vClose').focus({ preventScroll: true }); } catch (e) {} }
     icons(); renderTop(); renderMine(); renderSaved();
   }
   function stepView(d) {
@@ -796,6 +834,12 @@ tailwind.config = {
   $('#vClose').addEventListener('click', closeViewer);
   $('#vPrev').addEventListener('click', () => stepView(-1));
   $('#vNext').addEventListener('click', () => stepView(1));
+  let tx = null, ty = null;
+  viewer.addEventListener('touchstart', e => { if (e.touches.length !== 1) { tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  viewer.addEventListener('touchend', e => {
+    if (tx == null) return; const t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6 && !e.target.closest('video,iframe')) stepView(dx < 0 ? 1 : -1);
+  }, { passive: true });
   viewer.addEventListener('click', e => { if (e.target === viewer) closeViewer(); });
   $('#vBody').addEventListener('click', e => {
     const im = e.target.closest('#vImg'); if (!im) return;
@@ -889,7 +933,7 @@ tailwind.config = {
     $('#aTabLogin').classList.toggle('pill-active', m === 'login');
     $('#aTabReg').classList.toggle('pill-active', m === 'reg');
     $('#aSubmit').textContent = m === 'login' ? 'Kirish' : "Ro'yxatdan o'tish";
-    $('#aPass').autocomplete = m === 'login' ? 'current-password' : 'new-password';
+    $('#aPass').autocomplete = m === 'login' ? 'current-password' : 'new-password'; updStrength();
     $('#aErr').textContent = '';
   }
   function openAuth(m) { setAuthMode(m); show('#authModal'); setTimeout(() => $('#aUser').focus(), 50); }
@@ -912,6 +956,19 @@ tailwind.config = {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !authModal.classList.contains('hidden')) closeAuth(); });
   $('#aTabLogin').addEventListener('click', () => setAuthMode('login'));
   $('#aTabReg').addEventListener('click', () => setAuthMode('reg'));
+  function updStrength() {
+    const box = $('#aStrength'), p = $('#aPass').value;
+    box.classList.toggle('hidden', authMode !== 'reg' || !p);
+    let n = 0;
+    if (p.length >= 6) n++; if (p.length >= 10) n++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++; if (/\d/.test(p)) n++; if (/[^A-Za-z0-9]/.test(p)) n++;
+    n = Math.min(n, 4);
+    const L = [['Juda zaif', '#EF4444'], ['Zaif', '#EF4444'], ["O'rtacha", '#F59E0B'], ['Yaxshi', '#2563EB'], ['Kuchli', '#16A34A']][n];
+    $('#aStrBar').style.width = (n + 1) * 20 + '%'; $('#aStrBar').style.background = L[1];
+    $('#aStrTxt').textContent = 'Parol kuchi: ' + L[0];
+  }
+  $('#aPass').addEventListener('input', updStrength);
+  $('#aPass').addEventListener('keyup', e => { const on = e.getModifierState && e.getModifierState('CapsLock'); $('#aCaps').classList.toggle('hidden', !on); });
+  $('#aPass').addEventListener('blur', () => $('#aCaps').classList.add('hidden'));
   $('#authForm').addEventListener('submit', async e => {
     e.preventDefault();
     const name = $('#aUser').value.trim(), pw = $('#aPass').value, err = $('#aErr'), btn = $('#aSubmit');
@@ -1128,7 +1185,7 @@ tailwind.config = {
       const u = profiles[x.user_id] || { username: x.username }, mine = me && x.user_id === me.id;
       return `<div class="flex gap-2 ${mine ? 'flex-row-reverse' : ''}">${avatarHTML(u, 'w-7 h-7 text-[10px]')}<div class="max-w-[75%] ${mine ? 'text-right' : ''}">
         <div class="text-[11px] text-slate-500">${esc(u.username || '?')} ${badge(u.role)} • ${new Date(x.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${adm ? ` <button data-cd="${x.id}" class="text-red-500 font-bold">×</button>` : ''}</div>
-        <div class="inline-block mt-0.5 px-3 py-2 rounded-2xl text-sm text-left break-words ${mine ? 'bg-brand text-white' : 'bg-slate-100 dark:bg-slate-800'}">${esc(x.txt)}</div></div></div>`;
+        <div class="inline-block mt-0.5 px-3 py-2 rounded-2xl text-sm text-left break-words ${mine ? 'bg-brand text-white' : 'bg-slate-100 dark:bg-slate-800'}">${linkify(esc(x.txt))}</div></div></div>`;
     }).join('') : '<p class="text-sm text-slate-500 text-center mt-6">Hali xabar yo\'q. Birinchi bo\'lib yozing!</p>';
     box.scrollTop = box.scrollHeight;
   }
@@ -1256,7 +1313,7 @@ tailwind.config = {
     const box = $('#dmBox');
     box.innerHTML = list.length ? list.map(m => {
       const mine = m.sender === me.id;
-      return `<div class="flex ${mine ? 'justify-end' : 'justify-start'}"><div class="max-w-[80%] px-3 py-2 rounded-2xl text-sm break-words ${mine ? 'bg-brand text-white rounded-br-md' : 'bg-slate-100 dark:bg-slate-800 rounded-bl-md'}">${esc(m.txt)}<div class="text-[10px] mt-0.5 text-right ${mine ? 'text-white/70' : 'text-slate-400'}">${esc(timeStr(m.created_at))}</div></div></div>`;
+      return `<div class="flex ${mine ? 'justify-end' : 'justify-start'}"><div class="max-w-[80%] px-3 py-2 rounded-2xl text-sm break-words ${mine ? 'bg-brand text-white rounded-br-md' : 'bg-slate-100 dark:bg-slate-800 rounded-bl-md'}">${linkify(esc(m.txt))}<div class="text-[10px] mt-0.5 text-right ${mine ? 'text-white/70' : 'text-slate-400'}">${esc(timeStr(m.created_at))}</div></div></div>`;
     }).join('') : "<p class=\"text-sm text-slate-500 text-center mt-6\">Hali xabar yo'q. Birinchi bo'lib yozing!</p>";
     box.scrollTop = box.scrollHeight;
   }
@@ -1341,6 +1398,8 @@ tailwind.config = {
   });
   ['#authModal', '#tierModal', '#profileModal', '#adminModal', '#helpModal', '#viewer'].forEach(id => { const m = $(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
   $('#yr').textContent = new Date().getFullYear();
+  const BROKEN = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23e2e8f0'/%3E%3Cpath d='M14 46l12-14 9 10 6-7 9 11z' fill='%2394a3b8'/%3E%3Ccircle cx='42' cy='22' r='5' fill='%2394a3b8'/%3E%3C/svg%3E";
+  document.addEventListener('error', e => { const t = e.target; if (!t || t.tagName !== 'IMG' || t.dataset.err) return; t.dataset.err = '1'; t.src = BROKEN; }, true);
   $('#aEye').addEventListener('click', () => {
     const i = $('#aPass'), show_ = i.type === 'password';
     i.type = show_ ? 'text' : 'password';
@@ -1348,7 +1407,17 @@ tailwind.config = {
     $('#aEye').setAttribute('aria-label', show_ ? 'Parolni yashirish' : "Parolni ko'rsatish");
   });
   const toTop = $('#toTop');
-  window.addEventListener('scroll', () => toTop.classList.toggle('hidden', window.scrollY < 600), { passive: true });
+  const hdr = $('header'), spyLinks = $$('nav[aria-label="Asosiy menyu"] a'), spyIds = ['bosh', 'imkoniyatlar', 'yuklash', 'aloqa'];
+  let spyBusy = false;
+  function onScroll() {
+    toTop.classList.toggle('hidden', window.scrollY < 600);
+    hdr.classList.toggle('shadow-md', window.scrollY > 8);
+    let cur = '';
+    spyIds.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top <= 120) cur = id; });
+    spyLinks.forEach(a => { const on = a.getAttribute('href') === '#' + cur; a.style.color = on ? '#2563EB' : ''; a.style.fontWeight = on ? '700' : ''; });
+  }
+  window.addEventListener('scroll', () => { if (spyBusy) return; spyBusy = true; requestAnimationFrame(() => { spyBusy = false; onScroll(); }); }, { passive: true });
+  onScroll();
   toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   window.addEventListener('offline', () => toast('Internet aloqasi uzildi', true));
   window.addEventListener('online', () => toast('Internet aloqasi tiklandi!'));
@@ -1405,8 +1474,11 @@ tailwind.config = {
     const it = e.target.closest('[data-si]'); if (it) pickSugg(Number(it.dataset.si));
   });
   document.addEventListener('click', e => { if (!e.target.closest('#searchForm')) hideSugg(); });
-  clearBtn.addEventListener('click', () => { currentQuery = ''; updateTabCounts(null); setHash(); hideSugg(); });
-  ['#fTier', '#fSort'].forEach(i => $(i).addEventListener('change', () => { shownN = PAGE; if (currentData) render(); }));
+  clearBtn.addEventListener('click', () => { currentQuery = ''; document.title = '1 Qidiruv — Barchasi bitta qidiruvda'; updateTabCounts(null); setHash(); hideSugg(); });
+  ['#fTier', '#fSort'].forEach(i => {
+    try { $(i).value = lsGet('f_' + i, ''); } catch (e) {}
+    $(i).addEventListener('change', () => { lsSet('f_' + i, $(i).value); shownN = PAGE; if (currentData) render(); });
+  });
 
   async function copyText(t) {
     try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
@@ -1418,6 +1490,7 @@ tailwind.config = {
   document.addEventListener('click', e => {
     const v = e.target.closest('[data-view]');
     if (v) { viewMode = v.dataset.view === 'list' ? 'list' : 'grid'; lsSet('view', viewMode); render(); return; }
+    if (e.target.closest('[data-reset]')) { ['#fTier', '#fSort'].forEach(i => { $(i).value = ''; lsSet('f_' + i, ''); }); setTab('all'); return; }
     if (e.target.closest('[data-more]')) { shownN += PAGE; render(); return; }
     if (e.target.closest('[data-share]')) { copyText(location.href).then(ok => toast(ok ? 'Qidiruv havolasi nusxalandi!' : "Nusxalab bo'lmadi", !ok)); }
   });
@@ -1453,6 +1526,7 @@ tailwind.config = {
 
   /* ===== Fayllarim, saqlanganlar ===== */
   $('#mySearch').addEventListener('input', () => renderMine());
+  $('#mySelAll').addEventListener('click', () => { const cs = $$('#myFiles [data-sel]'), all = cs.length && cs.every(c => c.checked); cs.forEach(c => { c.checked = !all; }); updateSel(); });
   $('#mySort').addEventListener('change', () => renderMine());
   $('#myFiles').addEventListener('change', e => { if (e.target.matches('[data-sel]')) updateSel(); });
   $('#myDelSel').addEventListener('click', async () => {
@@ -1514,6 +1588,12 @@ tailwind.config = {
     form.addEventListener('submit', () => { bar.classList.add('hidden'); bar.classList.remove('flex'); });
     form.insertBefore(btn, form.lastElementChild); form.appendChild(bar);
   });
+
+  window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
+  setInterval(async () => {
+    if (!me || document.hidden) return;
+    try { await loadFiles(); if (currentData) doSearch(currentQuery, { live: true }); renderTop(); } catch (e) {}
+  }, 45 * 60 * 1000);
 
   /* ===== Ishga tushirish ===== */
   (async () => {
