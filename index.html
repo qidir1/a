@@ -53,6 +53,10 @@ tailwind.config = {
   @keyframes pkFall { to { transform: translateY(108vh) rotate(360deg); } }
   @keyframes pkShake { 10%,90%{transform:translate3d(-1px,0,0)} 20%,80%{transform:translate3d(2px,0,0)} 30%,50%,70%{transform:translate3d(-4px,0,0)} 40%,60%{transform:translate3d(4px,0,0)} }
   html.pk-shake { animation: pkShake .5s linear infinite; }
+  @keyframes pkGlitchBox { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-3px,2px)} 40%{transform:translate(3px,-2px)} 60%{transform:translate(-2px,-2px)} 80%{transform:translate(2px,2px)} }
+  @keyframes pkGlitchTxt { 0%,100%{text-shadow:2px 0 #EF4444,-2px 0 #2563EB;transform:translate(0,0)} 25%{text-shadow:-3px 0 #EF4444,3px 0 #2563EB;transform:translate(1px,-1px)} 50%{text-shadow:3px 0 #EF4444,-3px 0 #2563EB;transform:translate(-1px,1px)} 75%{text-shadow:-2px 0 #EF4444,2px 0 #2563EB;transform:translate(1px,1px)} }
+  .pk-glitch { animation: pkGlitchBox .25s steps(2) infinite; }
+  .pk-glitch-txt { animation: pkGlitchTxt .2s steps(2) infinite; }
   kbd { font-family: inherit; }
   :focus-visible { outline: 2px solid #38BDF8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
@@ -1170,8 +1174,21 @@ tailwind.config = {
     { id: 'rain', label: '🌧 Emoji yomg\'iri', dur: 5000 },
     { id: 'dodge', label: '🏃 Qochqin tugma', dur: 8000 },
     { id: 'alert', label: '😱 Soxta ogohlantirish', dur: 5000 },
+    { id: 'meme', label: '😹 Tasodifiy mem', dur: 4000 },
   ];
   let prankChan = null, prankTimer = null, dodgeTimer = null;
+  function beep(freqs, dur) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      freqs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + i * (dur / freqs.length);
+        o.type = 'square'; o.frequency.value = f; g.gain.value = 0.05;
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur / freqs.length);
+        o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur / freqs.length);
+      });
+      setTimeout(() => ctx.close(), dur * 1000 + 200);
+    } catch (e) {}
+  }
   function subscribePranks() {
     if (prankChan || !me) return;
     try {
@@ -1230,15 +1247,36 @@ tailwind.config = {
     } else if (type === 'alert') {
       ov.classList.add('pointer-events-auto');
       ov.innerHTML = `<div class="absolute inset-0 bg-red-600/95 flex items-center justify-center p-6">
-        <div id="pkAlertBox" class="max-w-sm w-full bg-white rounded-2xl p-6 text-center shadow-2xl">
+        <div id="pkAlertBox" class="pk-glitch max-w-sm w-full bg-white rounded-2xl p-6 text-center shadow-2xl">
           <div id="pkAlertIcon" class="text-5xl mb-3">🐛</div>
-          <div id="pkAlertTxt" class="text-slate-900 font-extrabold text-lg">Fayllar shifrlanmoqda...</div>
+          <div id="pkAlertTxt" class="pk-glitch-txt text-slate-900 font-extrabold text-lg">FAYLLAR SHIFRLANMOQDA...</div>
           <div class="text-slate-500 text-sm mt-1">Iltimos kuting</div>
         </div></div>`;
+      beep([180, 140, 180, 110], 1.1);
       setTimeout(() => {
         const box = $('#pkAlertBox'); if (!box) return;
+        box.classList.remove('pk-glitch'); $('#pkAlertTxt').classList.remove('pk-glitch-txt');
         $('#pkAlertIcon').textContent = '😄'; $('#pkAlertTxt').textContent = 'Hazil edi! Hech narsa bo\'lmadi 🎉'; box.classList.add('bg-green-50');
-      }, 1800);
+        beep([523, 659, 784], 0.5);
+      }, 2600);
+    } else if (type === 'meme') {
+      ov.classList.add('pointer-events-auto');
+      const MEMES = [
+        { big: '💻', top: "KOD ISHLAYABDI", bottom: "HECH KIM BILMAYDI NEGA" },
+        { big: '🐢', top: "INTERNET TEZLIGI", bottom: "FAYL YUKLANMOQDA..." },
+        { big: '🙃', top: "MEN: BUGUN ERTA YOTAMAN", bottom: "SOAT: 03:00" },
+        { big: '😹', top: "ADMIN SIZGA HAZIL", bottom: "YUBORDI" },
+        { big: '🧠', top: "MIYAM 2 FOIZ ISHLAYABDI", bottom: "QOLGANI KOTIK VIDEOLARI" },
+        { big: '📉', top: "MENING ENERGIYAM", bottom: "DUSHANBA ERTALAB" },
+      ];
+      const m = MEMES[Math.floor(Math.random() * MEMES.length)];
+      ov.innerHTML = `<div class="absolute inset-0 bg-black/80 flex items-center justify-center p-6">
+        <div class="max-w-xs w-full bg-white rounded-2xl overflow-hidden shadow-2xl text-center select-none">
+          <div class="px-3 pt-3 font-extrabold text-lg uppercase tracking-tight text-slate-900" style="font-family:Impact,'Arial Black',sans-serif">${m.top}</div>
+          <div class="text-7xl py-4">${m.big}</div>
+          <div class="px-3 pb-4 font-extrabold text-lg uppercase tracking-tight text-slate-900" style="font-family:Impact,'Arial Black',sans-serif">${m.bottom}</div>
+        </div></div>`;
+      beep([392, 523], 0.3);
     }
     const revert = () => clearPranks();
     document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { revert(); document.removeEventListener('keydown', esc); } });
