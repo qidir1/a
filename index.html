@@ -342,6 +342,17 @@ tailwind.config = {
     </div>
     <div id="pkGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
     <p id="pkStatus" class="text-xs text-slate-500 mt-2 min-h-[1rem]"></p>
+    <h3 class="font-bold mt-5 mb-2">🤖 Sun'iy intellekt (AI yordamchi)</h3>
+    <p class="text-xs text-slate-500 -mt-1 mb-2">Foydalanuvchilar chatdagi "AI" bo'limida savol yozsa, shu sozlamalar orqali javob oladi. OpenAI bilan mos (ya'ni /chat/completions) kalit kerak. Diqqat: kalit har bir foydalanuvchi brauzerida ko'rinadi — faqat limit qo'yilgan kalit ishlating.</p>
+    <form id="aiForm" class="grid gap-2">
+      <input id="aiEndpoint" type="text" placeholder="API manzili" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand">
+      <input id="aiModel" type="text" placeholder="Model nomi (masalan: gpt-4o-mini)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand">
+      <input id="aiKeyInput" type="password" autocomplete="off" placeholder="API kalit (saqlanganini o'zgartirish uchungina kiriting)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand">
+      <div class="flex items-center gap-3">
+        <button id="aiSaveBtn" type="submit" class="px-4 py-2 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Saqlash</button>
+        <span id="aiStatus" class="text-xs text-slate-500"></span>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -352,10 +363,15 @@ tailwind.config = {
   <div class="flex gap-2 p-2 border-b border-slate-200 dark:border-slate-800">
     <button id="ctPub" type="button" class="pill-active flex-1 text-sm font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 transition">Umumiy</button>
     <button id="ctDm" type="button" class="flex-1 text-sm font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 transition">Shaxsiy <span id="dmBadge" class="hidden ml-1 min-w-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] font-bold"></span></button>
+    <button id="ctAi" type="button" class="flex-1 text-sm font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 transition">🤖 AI</button>
   </div>
   <div id="pubView" class="flex flex-1 min-h-0 flex-col">
   <div id="chatBox" class="flex-1 overflow-auto p-3 space-y-3"></div>
   <form id="chatForm" class="p-2 border-t border-slate-200 dark:border-slate-800 flex gap-2"><input id="chatIn" maxlength="300" autocomplete="off" placeholder="Xabar yozing..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">➤</button></form>
+  </div>
+  <div id="aiView" class="hidden flex-1 min-h-0 flex-col">
+    <div id="aiBox" class="flex-1 overflow-auto p-3 space-y-3"></div>
+    <form id="aiChatForm" class="p-2 border-t border-slate-200 dark:border-slate-800 flex gap-2"><input id="aiIn" maxlength="500" autocomplete="off" placeholder="AI'dan savol so'rang..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm"><button id="aiSendBtn" class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition disabled:opacity-60">➤</button></form>
   </div>
   <div id="dmView" class="hidden flex-1 min-h-0 flex-col">
     <div id="dmListView" class="flex flex-1 min-h-0 flex-col">
@@ -982,7 +998,7 @@ tailwind.config = {
   }
   async function afterAuth() {
     await loadMe(); if (!me) return;
-    await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs();
+    await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs(); await loadSettings().catch(() => {});
     refreshAuth(); renderMine(); renderTop();
   }
   $('#authBtn').addEventListener('click', () => { if (me) logout(); else openAuth('login'); });
@@ -1050,11 +1066,12 @@ tailwind.config = {
 
   /* ===== Supabase: ma'lumotlar ===== */
   const sb = window.supabase.createClient('https://rkvpxzzjxpcwnasbozlm.supabase.co', 'sb_publishable_44qiKkyZ47SKOogpHCCujQ_i6bFnZwJ');
-  let me = null, sbFiles = [], msgs = [], chan = null; const profiles = {};
+  let me = null, sbFiles = [], msgs = [], chan = null; const profiles = {}; const settings = {}, aiMsgs = []; let aiBusy = false;
   const currentUser = () => me ? me.id : null;
   const myRole = () => me ? me.role || null : null;
   const isAdmin = () => myRole() === 'ADMIN';
   async function loadProfiles() { const { data } = await sb.from('profiles').select('*'); (data || []).forEach(p => profiles[p.id] = p); }
+  async function loadSettings() { const { data } = await sb.from('settings').select('*'); (data || []).forEach(s => settings[s.key] = s.value); }
   async function loadMe() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { me = null; return; }
@@ -1292,6 +1309,64 @@ tailwind.config = {
     if (prankChan && prankChan.state === 'joined') fire(); else setTimeout(fire, 400);
   });
 
+  $('#aiForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!isAdmin()) return;
+    const btn = $('#aiSaveBtn'); btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+    const endpoint = $('#aiEndpoint').value.trim() || 'https://api.openai.com/v1/chat/completions';
+    const model = $('#aiModel').value.trim() || 'gpt-4o-mini';
+    const key = $('#aiKeyInput').value.trim();
+    try {
+      await sb.rpc('admin_set_setting', { p_key: 'ai_endpoint', p_value: endpoint });
+      await sb.rpc('admin_set_setting', { p_key: 'ai_model', p_value: model });
+      if (key) await sb.rpc('admin_set_setting', { p_key: 'ai_key', p_value: key });
+      await loadSettings();
+      $('#aiKeyInput').value = '';
+      $('#aiStatus').textContent = settings.ai_key ? "Holati: kalit saqlangan ✅" : "Holati: kalit kiritilmagan ❌";
+      toast('AI sozlamalari saqlandi!');
+    } catch (ex) {
+      toast('Xatolik: ' + (ex && ex.message ? ex.message : ex), true);
+    } finally { btn.disabled = false; btn.textContent = 'Saqlash'; }
+  });
+
+  /* ===== AI yordamchi ===== */
+  function aiRender() {
+    const box = $('#aiBox');
+    box.innerHTML = aiMsgs.length ? aiMsgs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="max-w-[85%] px-3 py-2 rounded-2xl text-sm break-words whitespace-pre-wrap ${m.role === 'user' ? 'bg-brand text-white rounded-br-md' : 'bg-slate-100 dark:bg-slate-800 rounded-bl-md'}">${m.pending ? '<span class="italic opacity-70">AI yozmoqda...</span>' : linkify(esc(m.content))}</div></div>`).join('')
+      : '<p class="text-sm text-slate-500 text-center mt-6">🤖 Savolingizni yozing — AI yordamchi javob beradi.</p>';
+    box.scrollTop = box.scrollHeight;
+  }
+  async function askAI(question) {
+    if (!settings.ai_key) { aiMsgs.push({ role: 'user', content: question }, { role: 'assistant', content: "AI hali sozlanmagan. Administrator boshqaruv panelida API kalit kiritishi kerak." }); aiRender(); return; }
+    aiMsgs.push({ role: 'user', content: question });
+    const pending = { role: 'assistant', content: '', pending: true };
+    aiMsgs.push(pending); aiRender();
+    try {
+      const history = aiMsgs.filter(m => !m.pending).slice(-16).map(m => ({ role: m.role, content: m.content }));
+      const res = await fetch(settings.ai_endpoint || 'https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + settings.ai_key },
+        body: JSON.stringify({
+          model: settings.ai_model || 'gpt-4o-mini',
+          messages: [{ role: 'system', content: "Siz '1 Qidiruv' nomli fayl qidiruv saytidagi foydali AI yordamchisiz. Qisqa, aniq va o'zbek tilida javob bering." }, ...history]
+        })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error && data.error.message) || ('Server xatosi: ' + res.status));
+      const txt = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      pending.content = txt ? txt.trim() : "AI'dan javob kelmadi.";
+    } catch (ex) {
+      pending.content = 'Xatolik: ' + (ex && ex.message ? ex.message : 'AI bilan bog\'lanib bo\'lmadi.');
+    } finally { pending.pending = false; aiRender(); }
+  }
+  $('#aiChatForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (aiBusy) return;
+    const txt = $('#aiIn').value.trim(); if (!txt) return;
+    $('#aiIn').value = ''; aiBusy = true; $('#aiSendBtn').disabled = true;
+    try { await askAI(txt); } finally { aiBusy = false; $('#aiSendBtn').disabled = false; $('#aiIn').focus(); }
+  });
+
   const rowCls = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm';
   async function adminRender() {
     if (!isAdmin()) return;
@@ -1307,7 +1382,14 @@ tailwind.config = {
     }).join('');
     $('#adFiles').innerHTML = sbFiles.length ? sbFiles.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName)} • ${r.tier} → ${(r.vis || []).join(', ')}</span></span><button data-edit="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-brand hover:text-brand">Tahrirlash</button><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
   }
-  $('#adminBtn').addEventListener('click', () => { if (isAdmin()) { show('#adminModal'); adminRender(); } });
+  $('#adminBtn').addEventListener('click', () => {
+    if (!isAdmin()) return;
+    show('#adminModal'); adminRender();
+    $('#aiEndpoint').value = settings.ai_endpoint || 'https://api.openai.com/v1/chat/completions';
+    $('#aiModel').value = settings.ai_model || 'gpt-4o-mini';
+    $('#aiKeyInput').value = '';
+    $('#aiStatus').textContent = settings.ai_key ? "Holati: kalit saqlangan ✅" : "Holati: kalit kiritilmagan ❌";
+  });
   $('#adClose').addEventListener('click', () => hide('#adminModal'));
   $('#adminModal').addEventListener('change', async e => {
     const k = e.target.dataset.ar; if (!k || !isAdmin()) return;
@@ -1489,8 +1571,11 @@ tailwind.config = {
     chatTab = t;
     $('#ctPub').classList.toggle('pill-active', t === 'pub');
     $('#ctDm').classList.toggle('pill-active', t === 'dm');
-    if (t === 'pub') { show('#pubView'); hide('#dmView'); chatRender(); }
-    else { hide('#pubView'); show('#dmView'); dmRender(); if (dmPeer) dmMarkRead(); }
+    $('#ctAi').classList.toggle('pill-active', t === 'ai');
+    hide('#pubView'); hide('#dmView'); hide('#aiView');
+    if (t === 'pub') { show('#pubView'); chatRender(); }
+    else if (t === 'ai') { show('#aiView'); aiRender(); setTimeout(() => $('#aiIn').focus(), 50); }
+    else { show('#dmView'); dmRender(); if (dmPeer) dmMarkRead(); }
   }
   async function openDm(pid) {
     if (!me || !myRole()) { toast('Chatdan foydalanish uchun avval toifa tanlang', true); return; }
@@ -1503,6 +1588,7 @@ tailwind.config = {
     await loadDms(); await loadBlocks();
     if (dmPeer === pid) { dmRender(); dmMarkRead(); $('#dmIn').focus(); }
   }
+  $('#ctAi').addEventListener('click', () => setChatTab('ai'));
   $('#ctPub').addEventListener('click', () => setChatTab('pub'));
   $('#ctDm').addEventListener('click', () => { dmPeer = null; setChatTab('dm'); });
   $('#chatFab').addEventListener('click', () => { if (chatOpen() && chatTab === 'dm') { dmRender(); if (dmPeer) dmMarkRead(); } });
@@ -1827,7 +1913,7 @@ tailwind.config = {
 
   /* ===== Ishga tushirish ===== */
   (async () => {
-    try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs(); } } catch (e) { console.error(e); }
+    try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs(); await loadSettings().catch(() => {}); } } catch (e) { console.error(e); }
     refreshAuth(); renderMine(); renderTop(); renderSaved(); icons(); bootFromHash();
   })();
 })();
