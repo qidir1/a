@@ -290,6 +290,24 @@ tailwind.config = {
   </div>
 </div>
 
+<div id="editModal" class="hidden fixed inset-0 z-[67] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full max-w-md max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+    <div class="flex items-center justify-between"><h2 class="text-lg font-bold">Faylni tahrirlash</h2><button id="eClose" type="button" aria-label="Yopish" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <form id="editForm" class="mt-4 grid gap-3">
+      <div id="eName" class="text-xs text-slate-500 truncate"></div>
+      <input id="eTitle" type="text" maxlength="100" placeholder="Fayl nomi" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <input id="eDesc" type="text" maxlength="200" placeholder="Tavsif" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <div class="px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><div class="text-sm font-semibold mb-2">Kimlar ko'ra oladi?</div><div id="eVis" class="flex flex-wrap gap-4"></div></div>
+      <label class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand cursor-pointer text-center transition">
+        <span id="eFileName" class="text-sm text-slate-500"></span>
+        <input id="eFile" type="file" class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
+      </label>
+      <p id="eErr" class="text-sm text-red-500 min-h-[1.25rem]" aria-live="polite"></p>
+      <div class="grid grid-cols-2 gap-2"><button id="eSave" type="submit" class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition disabled:opacity-60">Saqlash</button><button id="eCancel" type="button" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-semibold hover:border-brand">Bekor qilish</button></div>
+    </form>
+  </div>
+</div>
+
 <div id="profileModal" class="hidden fixed inset-0 z-[64] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
   <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-sm text-center max-h-[92vh] overflow-auto">
     <div class="flex justify-between items-center"><h2 class="text-lg font-bold">Profil</h2><button id="pClose" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
@@ -611,7 +629,7 @@ tailwind.config = {
     const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.at ? ' • ' + esc(timeAgo(r.at)) : ''}`;
     const owner = r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong>${dmBtn(r)}</div>` : '';
     const sel = withDelete ? `<label class="absolute top-2 left-2 z-10 w-6 h-6 rounded-md bg-white/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-600 grid place-items-center cursor-pointer"><input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600"></label>` : '';
-    const del = withDelete ? `<button data-del="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : '';
+    const del = withDelete ? `<button data-edit="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-brand hover:text-brand">Tahrirlash</button><button data-del="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : '';
     if (mode === 'list') {
       return `<div class="fade-up relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         ${sel ? `<input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600 w-4 h-4 shrink-0">` : ''}
@@ -632,7 +650,7 @@ tailwind.config = {
         <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}</div>
         ${owner}
         ${r.desc ? `<p class="mt-2 text-sm font-semibold leading-snug px-3 py-2 rounded-lg border-l-4 border-brand bg-brand/10 text-brand dark:text-accent line-clamp-3">✨ ${hl(r.desc, terms)}</p>` : ''}
-        <div class="mt-3 flex gap-2">
+        <div class="mt-3 flex flex-wrap gap-2">
           <button data-open="${id}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
           <a data-dl href="${url}" download="${esc(r.name)}" class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>
           ${favBtn(r, 'px-2 rounded-lg border border-slate-300 dark:border-slate-600')}${del}
@@ -819,7 +837,7 @@ tailwind.config = {
     $('#vPos').textContent = can ? (i + 1) + ' / ' + navIds.length : '';
     $('#vPrev').disabled = $('#vNext').disabled = !can;
     const rel = relatedOf(r);
-    $('#vFoot').innerHTML = `<div class="flex flex-wrap items-center gap-2"><a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>${favBtn(r, 'px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600')}</div>`
+    $('#vFoot').innerHTML = `<div class="flex flex-wrap items-center gap-2"><a data-dl href="${url}" download="${esc(r.name)}" class="inline-block px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Yuklab olish</a>${favBtn(r, 'px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600')}${canEdit(r) ? '<button type="button" data-edit="' + esc(r.id) + '" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-semibold hover:border-brand hover:text-brand">Tahrirlash</button>' : ''}</div>`
       + (rel.length ? `<div class="mt-5"><div class="text-sm font-bold mb-2">O'xshash fayllar</div><div class="grid gap-2 sm:grid-cols-2">${rel.map(x => `<div class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700">${thumbHTML(x, false)}<div class="min-w-0"><div data-open="${esc(x.id)}" class="text-sm font-semibold truncate cursor-pointer hover:text-brand">${esc(x.title)}</div><div class="text-xs text-slate-500">${kindLabel(x.kind)} • ${fmtSize(x.size)}</div></div></div>`).join('')}</div></div>` : '');
     const wasHidden = viewer.classList.contains('hidden');
     viewer.classList.remove('hidden'); viewer.classList.add('flex');
@@ -1142,7 +1160,7 @@ tailwind.config = {
         <select data-ar="${k}" ${k === me.id ? 'disabled' : ''} class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${['', ...ROLES].map(r => `<option value="${r}" ${(u.role || '') === r ? 'selected' : ''}>${r || '— toifasiz —'}</option>`).join('')}</select>
         ${k === me.id ? '' : `<button data-au="${k}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>`}</div>`;
     }).join('');
-    $('#adFiles').innerHTML = sbFiles.length ? sbFiles.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName)} • ${r.tier} → ${(r.vis || []).join(', ')}</span></span><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
+    $('#adFiles').innerHTML = sbFiles.length ? sbFiles.map(r => `<div class="${rowCls}"><span class="truncate flex-1">${esc(r.title)} <span class="text-xs text-slate-500">• ${esc(r.ownerName)} • ${r.tier} → ${(r.vis || []).join(', ')}</span></span><button data-edit="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-brand hover:text-brand">Tahrirlash</button><button data-af="${r.id}" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button></div>`).join('') : '<p class="text-sm text-slate-500">Yuklangan fayl yo\'q.</p>';
   }
   $('#adminBtn').addEventListener('click', () => { if (isAdmin()) { show('#adminModal'); adminRender(); } });
   $('#adClose').addEventListener('click', () => hide('#adminModal'));
@@ -1392,11 +1410,11 @@ tailwind.config = {
   /* ===== Qo'shimcha qulayliklar ===== */
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    ['#profileModal', '#adminModal', '#helpModal'].forEach(id => { if (!$(id).classList.contains('hidden')) hide(id); });
+    ['#profileModal', '#adminModal', '#helpModal', '#editModal'].forEach(id => { if (!$(id).classList.contains('hidden')) hide(id); });
     if (!$('#tierModal').classList.contains('hidden') && myRole()) hide('#tierModal');
     if (chatOpen()) { const p = $('#chatPanel'); p.classList.add('hidden'); p.classList.remove('flex'); }
   });
-  ['#authModal', '#tierModal', '#profileModal', '#adminModal', '#helpModal', '#viewer'].forEach(id => { const m = $(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
+  ['#authModal', '#tierModal', '#profileModal', '#adminModal', '#helpModal', '#editModal', '#viewer'].forEach(id => { const m = $(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
   $('#yr').textContent = new Date().getFullYear();
   const BROKEN = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23e2e8f0'/%3E%3Cpath d='M14 46l12-14 9 10 6-7 9 11z' fill='%2394a3b8'/%3E%3Ccircle cx='42' cy='22' r='5' fill='%2394a3b8'/%3E%3C/svg%3E";
   document.addEventListener('error', e => { const t = e.target; if (!t || t.tagName !== 'IMG' || t.dataset.err) return; t.dataset.err = '1'; t.src = BROKEN; }, true);
@@ -1594,6 +1612,73 @@ tailwind.config = {
     if (!me || document.hidden) return;
     try { await loadFiles(); if (currentData) doSearch(currentQuery, { live: true }); renderTop(); } catch (e) {}
   }, 45 * 60 * 1000);
+
+  /* ===== Fayllarni tahrirlash ===== */
+  const EF_TXT = "Faylni almashtirish (ixtiyoriy, 50 MB gacha) — bosing";
+  let editId = null;
+  function canEdit(r) { return !!r && !r.remote && !!me && (isAdmin() || (!!r.owner && r.owner === currentUser())); }
+  function openEdit(id) {
+    closeViewer();
+    const r = sbFiles.find(c => c.id === id);
+    if (!canEdit(r)) { toast("Bu faylni tahrirlash mumkin emas!", true); return; }
+    editId = id;
+    $('#eName').textContent = r.name + ' • ' + fmtSize(r.size);
+    $('#eTitle').value = r.title; $('#eDesc').value = r.desc || '';
+    $('#eFile').value = ''; $('#eFileName').textContent = EF_TXT; $('#eErr').textContent = '';
+    const opts = MATRIX[r.tier || (me && me.role)] || [];
+    $('#eVis').innerHTML = opts.map(t => `<label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" value="${t}" ${(!r.vis || r.vis.includes(t)) ? 'checked' : ''} class="accent-blue-600"> ${t}</label>`).join('');
+    show('#editModal'); setTimeout(() => $('#eTitle').focus(), 50);
+  }
+  function closeEdit() { hide('#editModal'); editId = null; }
+  $('#eClose').addEventListener('click', closeEdit);
+  $('#eCancel').addEventListener('click', closeEdit);
+  $('#editModal').addEventListener('click', e => { if (e.target.id === 'editModal') closeEdit(); });
+  $('#eFile').addEventListener('change', () => {
+    const f = $('#eFile').files[0];
+    $('#eFileName').textContent = f ? f.name + ' (' + fmtSize(f.size) + ')' : EF_TXT;
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-edit]'); if (!b) return;
+    e.preventDefault(); openEdit(b.dataset.edit);
+  });
+  $('#editForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const r = sbFiles.find(c => c.id === editId), err = $('#eErr'), btn = $('#eSave');
+    if (!canEdit(r) || btn.disabled) return;
+    const vis = $$('#eVis input:checked').map(i => i.value);
+    if (!vis.length) { err.textContent = 'Kamida bitta toifani tanlang.'; return; }
+    const nf = $('#eFile').files[0];
+    if (nf && nf.size > MAX) { err.textContent = 'Fayl 50 MB dan katta.'; return; }
+    err.textContent = ''; btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+    const patch = { title: ($('#eTitle').value.trim() || r.title).slice(0, 100), descr: $('#eDesc').value.trim().slice(0, 200), vis };
+    let newPath = null;
+    try {
+      if (nf) {
+        newPath = me.id + '/' + Date.now() + '-' + nf.name.replace(/[^\w.\-]+/g, '_');
+        const up = await sb.storage.from('files').upload(newPath, nf, { contentType: nf.type || 'application/octet-stream' });
+        if (up.error) throw up.error;
+        Object.assign(patch, { path: newPath, name: nf.name, size: nf.size, kind: typeOf(nf) });
+      }
+      const { data, error } = await sb.from('files').update(patch).eq('id', r.sid).select();
+      if (error || !data || !data.length) {
+        if (newPath) await sb.storage.from('files').remove([newPath]);
+        throw error || new Error('policy');
+      }
+      if (newPath) {
+        await sb.storage.from('files').remove([r.path]);
+        [favKey(), recKey()].forEach(k => { const a = lsGet(k, []); if (a.includes(r.path)) lsSet(k, a.map(x => x === r.path ? newPath : x)); });
+      }
+      await loadFiles(); closeEdit();
+      renderMine(); renderTop(); renderSaved();
+      if (currentData) doSearch(currentQuery, { live: true });
+      if (!$('#adminModal').classList.contains('hidden')) adminRender();
+      toast('Fayl yangilandi!');
+    } catch (ex) {
+      err.textContent = /policy|row-level|permission/i.test(String(ex && ex.message)) || String(ex && ex.message) === 'policy'
+        ? "Saqlab bo'lmadi: ruxsat yo'q. Supabase'da edit.sql ni ishga tushiring."
+        : 'Xatolik: ' + (ex && ex.message ? ex.message : ex);
+    } finally { btn.disabled = false; btn.textContent = 'Saqlash'; }
+  });
 
   /* ===== Ishga tushirish ===== */
   (async () => {
