@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>try{if(localStorage.getItem("theme")==="light")document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");}catch(e){document.documentElement.classList.add("dark");}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -39,7 +40,11 @@ tailwind.config = {
   .fade-up { animation: fadeUp .45s ease both; }
   .skeleton { background: linear-gradient(90deg, rgba(148,163,184,.15), rgba(148,163,184,.3), rgba(148,163,184,.15)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
-  .pill-active { background: #2563EB; color: #fff; border-color: #2563EB; }
+  .pill-active { background: #2563EB !important; color: #fff !important; border-color: #2563EB !important; }
+  html { color-scheme: light; } html.dark { color-scheme: dark; }
+  body { overflow-x: hidden; }
+  section[id], footer[id] { scroll-margin-top: 84px; }
+  .no-anim .fade-up { animation: none !important; }
   kbd { font-family: inherit; }
   :focus-visible { outline: 2px solid #38BDF8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
@@ -50,12 +55,12 @@ tailwind.config = {
 
 <!-- HEADER -->
 <header class="sticky top-0 z-40 backdrop-blur bg-lightbg/80 dark:bg-darkbg/80 border-b border-slate-200 dark:border-slate-800">
-  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-    <a href="#bosh" class="flex items-center gap-2 font-extrabold text-lg">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+    <a href="#bosh" class="flex items-center gap-2 font-extrabold text-lg shrink-0">
       <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-accent grid place-items-center text-white"><i data-lucide="search" class="w-5 h-5"></i></span>
-      <span>1 Qidiruv</span>
+      <span class="hidden min-[380px]:inline">1 Qidiruv</span>
     </a>
-    <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600 dark:text-slate-300" aria-label="Asosiy menyu">
+    <nav class="hidden lg:flex items-center gap-4 xl:gap-7 text-sm font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap" aria-label="Asosiy menyu">
       <a href="#bosh" class="hover:text-brand">Bosh sahifa</a>
       <a href="#imkoniyatlar" class="hover:text-brand">Imkoniyatlar</a>
             <a href="#top" class="hover:text-brand">Top fayllar</a>
@@ -64,25 +69,25 @@ tailwind.config = {
       <a href="#yuklash" class="hover:text-brand">Fayl yuklash</a>
       <a href="#aloqa" class="hover:text-brand">Aloqa</a>
     </nav>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <button id="adminBtn" class="hidden text-sm font-semibold px-3 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20">🛠 Panel</button>
       <button id="userChip" title="Profil" class="hidden items-center gap-2 text-sm font-semibold px-2 py-1.5 rounded-xl bg-brand/10 text-brand"></button>
-      <button id="authBtn" class="text-sm font-semibold px-4 py-2 rounded-xl bg-brand text-white hover:bg-blue-700 transition">Kirish</button>
+      <button id="authBtn" class="text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl bg-brand text-white hover:bg-blue-700 transition whitespace-nowrap">Kirish</button>
       <button id="themeBtn" title="Tungi / Kunduzgi rejim" aria-label="Tungi / Kunduzgi rejim" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
         <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
         <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
       </button>
-      <button id="menuBtn" class="md:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center" aria-label="Menyuni ochish"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <button id="menuBtn" class="lg:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center" aria-label="Menyuni ochish"><i data-lucide="menu" class="w-5 h-5"></i></button>
     </div>
   </div>
-  <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex-col gap-3 text-sm font-medium">
-    <a href="#bosh" class="block py-1">Bosh sahifa</a>
-    <a href="#imkoniyatlar" class="block py-1">Imkoniyatlar</a>
-        <a href="#top" class="block py-1">Top fayllar</a>
-    <a href="#mine" class="block py-1">Fayllarim</a>
-    <a href="#saved" class="block py-1">Saqlanganlar</a>
-    <a href="#yuklash" class="block py-1">Fayl yuklash</a>
-    <a href="#aloqa" class="block py-1">Aloqa</a>
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col gap-1 text-sm font-medium">
+    <a href="#bosh" class="block py-2">Bosh sahifa</a>
+    <a href="#imkoniyatlar" class="block py-2">Imkoniyatlar</a>
+        <a href="#top" class="block py-2">Top fayllar</a>
+    <a href="#mine" class="block py-2">Fayllarim</a>
+    <a href="#saved" class="block py-2">Saqlanganlar</a>
+    <a href="#yuklash" class="block py-2">Fayl yuklash</a>
+    <a href="#aloqa" class="block py-2">Aloqa</a>
   </div>
 </header>
 
@@ -104,18 +109,18 @@ tailwind.config = {
       <div id="sugg" role="listbox" class="hidden absolute left-0 right-0 top-full mt-2 z-30 text-left rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden"></div>
       <div class="search-glow flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-lg transition">
         <i data-lucide="search" class="w-5 h-5 ml-2 text-slate-400 shrink-0"></i>
-        <input id="q" type="text" maxlength="120" aria-label="Qidiruv maydoni" placeholder="Nimani qidirmoqchisiz? Masalan: Ob-havo, Dasturlash, Yangiliklar..." class="flex-1 min-w-0 bg-transparent outline-none px-1 py-3 text-sm sm:text-base placeholder:text-slate-400">
+        <input id="q" type="text" maxlength="120" aria-label="Qidiruv maydoni" placeholder="Nimani qidiryapsiz? Masalan: dasturlash..." class="flex-1 min-w-0 bg-transparent outline-none px-1 py-3 text-sm sm:text-base placeholder:text-slate-400">
         <kbd class="hidden sm:inline-block text-xs px-2 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-slate-400" title="Qidiruvga o'tish uchun / bosing">/</kbd>
-        <button type="button" id="clearBtn" class="hidden text-sm font-medium px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">Tozalash</button>
+        <button type="button" id="clearBtn" aria-label="Tozalash" class="hidden shrink-0 text-sm font-medium px-2 sm:px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><span class="sm:hidden">✕</span><span class="hidden sm:inline">Tozalash</span></button>
         <button type="submit" class="px-5 sm:px-7 py-3 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm sm:text-base transition shrink-0">Qidirish</button>
       </div>
     </form>
 
     <div id="tabs" class="mt-6 flex flex-wrap justify-center gap-2" role="tablist" aria-label="Qidiruv turlari">
-      <button data-cat="all" class="tab pill-active text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 transition" role="tab">Barchasi</button>
-      <button data-cat="img" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Rasmlar</button>
-      <button data-cat="vid" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Videolar</button>
-      <button data-cat="doc" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-brand transition" role="tab">Hujjatlar</button>
+      <button data-cat="all" class="tab pill-active text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition" role="tab">Barchasi</button>
+      <button data-cat="img" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand transition" role="tab">Rasmlar</button>
+      <button data-cat="vid" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand transition" role="tab">Videolar</button>
+      <button data-cat="doc" class="tab text-sm font-medium px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand transition" role="tab">Hujjatlar</button>
       </div>
     <div class="mt-4 flex flex-wrap justify-center gap-2">
       <select id="fTier" aria-label="Toifa" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><option value="">Barcha toifalar</option><option>NORMAL</option><option>PREMIUM</option><option>PRIV</option></select>
@@ -246,7 +251,7 @@ tailwind.config = {
         <li><a class="hover:text-brand" href="#bosh">Bosh sahifa</a></li>
         <li><a class="hover:text-brand" href="#imkoniyatlar">Imkoniyatlar</a></li>
                 <li><a class="hover:text-brand" href="#aloqa">Aloqa</a></li>
-        <li><button id="helpBtn" type="button" class="hover:text-brand">Tezkor tugmalar (?)</button></li>
+        <li><button id="helpBtn" type="button" class="text-left hover:text-brand">Tezkor tugmalar (?)</button></li>
       </ul>
     </div>
     <div>
@@ -264,7 +269,7 @@ tailwind.config = {
 </footer>
 
 <div id="tierModal" class="hidden fixed inset-0 z-[66] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
-  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md">
+  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-md max-h-[92vh] overflow-auto">
     <div class="flex items-start justify-between gap-3"><div><h2 class="text-lg font-bold">Toifangizni tanlang</h2><p class="text-xs text-slate-500 mt-0.5">Toifa qaysi fayllarni ko'rishingizni belgilaydi</p></div><button id="tClose" type="button" class="hidden w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
     <div class="mt-4 grid gap-2">
       <button data-tier="NORMAL" class="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand"><b>NORMAL</b> <span class="text-xs text-slate-500">— kodsiz, bepul</span></button>
@@ -277,7 +282,7 @@ tailwind.config = {
 </div>
 
 <div id="profileModal" class="hidden fixed inset-0 z-[64] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
-  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-sm text-center">
+  <div class="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl max-w-sm text-center max-h-[92vh] overflow-auto">
     <div class="flex justify-between items-center"><h2 class="text-lg font-bold">Profil</h2><button id="pClose" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
     <div id="pAv" class="mt-4 flex justify-center"></div>
     <div id="pName" class="mt-3 font-bold text-lg"></div><div id="pRole" class="mt-1"></div>
@@ -344,10 +349,10 @@ tailwind.config = {
 
 <button id="toTop" type="button" aria-label="Yuqoriga qaytish" class="hidden fixed bottom-5 left-5 z-40 w-11 h-11 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg grid place-items-center hover:border-brand text-lg">↑</button>
 
-<div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 z-[70] px-5 py-3 rounded-xl text-white text-sm font-semibold shadow-xl pointer-events-none" style="opacity:0;transform:translate(-50%,-150%);transition:all .35s ease"></div>
+<div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 z-[70] w-max max-w-[90vw] text-center px-5 py-3 rounded-xl text-white text-sm font-semibold shadow-xl pointer-events-none" style="opacity:0;transform:translate(-50%,-150%);transition:all .35s ease"></div>
 
 <div id="authModal" class="hidden fixed inset-0 z-[65] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
-  <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+  <div class="w-full max-w-sm max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
     <div class="flex items-center justify-between">
       <div><h2 class="text-lg font-bold">Hisobga kirish</h2><p class="text-xs text-slate-500 mt-0.5">Saytdan foydalanish uchun hisob oching yoki kiring</p></div>
       <button id="aClose" type="button" aria-label="Yopish" class="hidden w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button>
@@ -368,7 +373,7 @@ tailwind.config = {
 
 <div id="viewer" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
   <div class="w-full max-w-3xl max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
-    <div class="flex items-start justify-between gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
+    <div class="sticky top-0 z-10 bg-white dark:bg-slate-900 rounded-t-2xl flex items-start justify-between gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
       <div class="min-w-0"><div id="vTitle" class="font-bold truncate"></div><div id="vMeta" class="text-xs text-slate-500 mt-0.5 truncate"></div></div>
       <div class="flex items-center gap-1.5 shrink-0">
         <span id="vPos" class="text-xs text-slate-500 mr-1"></span>
@@ -446,7 +451,7 @@ tailwind.config = {
 
   /* ===== Qidiruv (yangilangan) ===== */
   const PAGE = 12;
-  let shownN = PAGE, seq = 0, viewMode = 'grid';
+  let shownN = PAGE, seq = 0, viewMode = 'grid', animate = true;
   function lsGet(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   viewMode = lsGet('view', 'grid') === 'list' ? 'list' : 'grid';
@@ -483,7 +488,7 @@ tailwind.config = {
     opts = opts || {};
     if (!currentUser()) { refreshAuth(); return; }
     const q = (raw || '').trim();
-    currentQuery = q; shownN = PAGE;
+    currentQuery = q; shownN = PAGE; animate = !opts.live;
     if (!opts.live) { pushHistory(q); hideSugg(); }
     setHash();
     section.classList.remove('hidden');
@@ -542,6 +547,7 @@ tailwind.config = {
         <p class="mt-1 text-sm text-slate-500">«${esc(currentQuery)}» bo'yicha foydalanuvchilar yuklagan fayllar yo'q. Boshqa so'z bilan urinib ko'ring yoki o'zingiz fayl yuklang.</p>
         <a href="#yuklash" class="inline-block mt-4 px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-blue-700">Fayl yuklash</a></div>`;
     }
+    results.classList.toggle('no-anim', !animate); animate = true;
     results.innerHTML = html;
     icons();
   }
