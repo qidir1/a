@@ -355,6 +355,16 @@ tailwind.config = {
       <div class="flex items-center gap-2"><button id="pkMediaSend" type="button" class="px-4 py-2 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition disabled:opacity-60">Yuklab yuborish</button></div>
     </div>
     <div class="mt-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 grid gap-2">
+      <div class="text-sm font-semibold">😹 Mem ovozlari kutubxonasi</div>
+      <p class="text-xs text-slate-500">O'zingiz topgan mem ovoz fayllarini (mp3, ogg, wav) bir marta qo'shing — keyin bitta tugma bilan yuborasiz.</p>
+      <div class="flex flex-wrap gap-2">
+        <input id="libFile" type="file" accept="audio/*" class="text-sm file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-brand/10 file:text-brand file:font-semibold">
+        <input id="libName" type="text" maxlength="40" placeholder="Nomi (ixtiyoriy)" class="flex-1 min-w-[8rem] px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand">
+        <button id="libAdd" type="button" class="px-4 py-2 rounded-xl border border-brand text-brand font-semibold text-sm hover:bg-brand/10 disabled:opacity-60">Qo'shish</button>
+      </div>
+      <div id="libList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+    </div>
+    <div class="mt-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 grid gap-2">
       <div class="text-sm font-semibold">💬 Matnli hazil</div>
       <div class="flex gap-2"><input id="pkText" type="text" maxlength="120" placeholder="Ekranda chiqadigan yozuv..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-brand"><button id="pkTextSend" type="button" class="px-4 py-2 rounded-xl border border-brand text-brand font-semibold text-sm hover:bg-brand/10">Yuborish</button></div>
     </div>
@@ -1239,13 +1249,13 @@ tailwind.config = {
   const TRANSFORMS = { mirror: 'scaleX(-1)', zoom: 'scale(1.5)' };
   /* notes: [chastota, boshlanish s, davomiyligi s, oxirgi chastota?] */
   const AUDIO = {
-    siren: { emoji: '🚨', wave: 'sine', vol: .12, notes: [[600, 0, .8, 1000], [1000, .8, .8, 600], [600, 1.6, .8, 1000], [1000, 2.4, .8, 600]] },
-    doorbell: { emoji: '🔔', wave: 'sine', vol: .18, notes: [[659, 0, .5], [523, .5, 1.1], [659, 1.3, .5], [523, 1.8, .7]] },
-    horn: { emoji: '🚗', wave: 'sawtooth', vol: .05, notes: [[233, 0, .8], [311, 0, .8], [233, 1.2, .8], [311, 1.2, .8]] },
-    drum: { emoji: '🥁', wave: 'sine', vol: .35, notes: [[160, 0, .25, 45], [160, .4, .25, 45], [160, .8, .25, 45], [160, 1.0, .25, 45], [160, 1.3, .35, 45]] },
-    robot: { emoji: '🤖', wave: 'square', vol: .05, notes: Array.from({ length: 12 }, (_, i) => [200 + Math.floor(Math.random() * 700), i * .2, .15]) },
-    ufo: { emoji: '🛸', wave: 'sine', vol: .15, notes: [[300, 0, 1.4, 1200], [1200, 1.4, 1.4, 300]] },
-    cat: { emoji: '🐱', wave: 'triangle', vol: .2, notes: [[500, 0, .35, 950], [950, .35, .6, 420]] },
+    siren: { emoji: '🚨', wave: 'sine', vol: .35, notes: [[600, 0, .8, 1000], [1000, .8, .8, 600], [600, 1.6, .8, 1000], [1000, 2.4, .8, 600]] },
+    doorbell: { emoji: '🔔', wave: 'sine', vol: .5, notes: [[659, 0, .5], [523, .5, 1.1], [659, 1.3, .5], [523, 1.8, .7]] },
+    horn: { emoji: '🚗', wave: 'sawtooth', vol: .16, notes: [[233, 0, .8], [311, 0, .8], [233, 1.2, .8], [311, 1.2, .8]] },
+    drum: { emoji: '🥁', wave: 'sine', vol: .9, notes: [[160, 0, .25, 45], [160, .4, .25, 45], [160, .8, .25, 45], [160, 1.0, .25, 45], [160, 1.3, .35, 45]] },
+    robot: { emoji: '🤖', wave: 'square', vol: .15, notes: Array.from({ length: 12 }, (_, i) => [200 + Math.floor(Math.random() * 700), i * .2, .15]) },
+    ufo: { emoji: '🛸', wave: 'sine', vol: .4, notes: [[300, 0, 1.4, 1200], [1200, 1.4, 1.4, 300]] },
+    cat: { emoji: '🐱', wave: 'triangle', vol: .5, notes: [[500, 0, .35, 950], [950, .35, .6, 420]] },
   };
   const SAFE_MEDIA = /^https:\/\/rkvpxzzjxpcwnasbozlm\.supabase\.co\//;
   let mediaEl = null, mediaActive = false, mediaFs = false, mediaTok = 0;
@@ -1286,16 +1296,19 @@ tailwind.config = {
   }
   function synth(notes, wave, vol) {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.resume) ctx.resume();
-      let end = 0;
-      notes.forEach(([f, st, d, f2]) => {
-        const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + st;
-        o.type = wave; o.frequency.setValueAtTime(f, t0);
-        if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
-        g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
-        o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + d + .02); end = Math.max(end, st + d);
-      });
-      setTimeout(() => ctx.close(), end * 1000 + 400);
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const play = () => {
+        let end = 0;
+        notes.forEach(([f, st, d, f2]) => {
+          const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + st + .05;
+          o.type = wave; o.frequency.setValueAtTime(f, t0);
+          if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
+          g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+          o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + d + .02); end = Math.max(end, st + d);
+        });
+        setTimeout(() => ctx.close(), end * 1000 + 600);
+      };
+      if (ctx.state === 'suspended' && ctx.resume) ctx.resume().then(play, play); else play();
     } catch (e) {}
   }
   let prankChan = null, prankTimer = null, dodgeTimer = null;
@@ -1471,9 +1484,21 @@ tailwind.config = {
       const tok = ++mediaTok;
       preloadMedia(type === 'audiofile' ? 'audio' : type, u).then(pre => {
       if (tok !== mediaTok) return;
-      mediaActive = type !== 'image'; ov.classList.add('pointer-events-auto');
-      const goFs = () => { try { const pr = ov.requestFullscreen && ov.requestFullscreen(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} };
-      const mkBtn = (txt, css, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = css; b.addEventListener('click', fn); return b; };
+      mediaActive = true; ov.classList.add('pointer-events-auto');
+            const mkBtn = (txt, css, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = css; b.addEventListener('click', fn); return b; };
+      const reqFs = () => { try { const q = ov.requestFullscreen && ov.requestFullscreen(); if (q && q.catch) q.catch(() => {}); } catch (e) {} };
+      const goFs = () => {
+        const fail = () => {
+          if (document.fullscreenElement) return;
+          ov.addEventListener('pointerdown', reqFs, { once: true });
+          ['keydown', 'touchend'].forEach(ev => document.addEventListener(ev, reqFs, { once: true, capture: true }));
+          if (!ov.querySelector('[data-fsb]')) {
+            const b = mkBtn("⛶ To'liq ekran", 'position:absolute;top:14px;left:14px;z-index:2;padding:10px 16px;border-radius:9999px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,.4);cursor:pointer', () => { reqFs(); b.remove(); });
+            b.dataset.fsb = '1'; ov.appendChild(b);
+          }
+        };
+        try { const pr = ov.requestFullscreen && ov.requestFullscreen(); if (pr && pr.catch) pr.catch(fail); else if (!pr) fail(); } catch (e) { fail(); }
+      };
       const closeB = mkBtn('✕', 'position:absolute;top:14px;right:14px;z-index:2;width:42px;height:42px;border-radius:9999px;background:rgba(0,0,0,.6);color:#fff;font-size:20px;border:1px solid rgba(255,255,255,.4);cursor:pointer', clearPranks);
       closeB.setAttribute('aria-label', 'Yopish');
       const soundCss = 'position:absolute;left:50%;bottom:36px;transform:translateX(-50%);z-index:2;padding:12px 22px;border-radius:9999px;background:#2563EB;color:#fff;font-weight:700;font-size:16px;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)';
@@ -1482,7 +1507,7 @@ tailwind.config = {
         const im = (pre && pre.tagName === 'IMG') ? pre : new Image(); if (im !== pre) im.src = u;
         im.alt = ''; im.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain';
         wrap.appendChild(im); wrap.appendChild(closeB); wrap.addEventListener('click', e => { if (e.target === wrap) clearPranks(); });
-        ov.appendChild(wrap);
+        ov.appendChild(wrap); goFs();
         clearTimeout(prankTimer); prankTimer = setTimeout(clearPranks, 8000);
       } else if (type === 'video') {
         const wrap = document.createElement('div'); wrap.style.cssText = 'position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center';
@@ -1497,9 +1522,10 @@ tailwind.config = {
       } else {
         const a = (pre && pre.tagName === 'AUDIO') ? pre : new Audio(u); mediaEl = a; a.addEventListener('ended', clearPranks);
         const bar = document.createElement('div'); bar.style.cssText = 'position:absolute;inset-x:0;bottom:30px;left:0;right:0;display:flex;justify-content:center;gap:10px;align-items:center';
+        bar.style.pointerEvents = 'auto'; ov.classList.remove('pointer-events-auto');
         const tag = document.createElement('div'); tag.textContent = '🔊 Ovoz ijro etilmoqda'; tag.style.cssText = 'padding:12px 22px;border-radius:9999px;background:rgba(0,0,0,.75);color:#fff;font-weight:700;font-size:16px';
         closeB.style.position = 'static'; bar.appendChild(tag); bar.appendChild(closeB); ov.appendChild(bar);
-        a.play().catch(() => { tag.textContent = '▶ Ovozni eshitish uchun bosing'; tag.style.cursor = 'pointer'; tag.addEventListener('click', () => { a.play().catch(() => {}); tag.textContent = '🔊 Ovoz ijro etilmoqda'; }); });
+        a.play().catch(() => { document.addEventListener('pointerdown', () => { a.play().catch(() => {}); }, { once: true }); tag.textContent = '▶ Ovozni eshitish uchun bosing'; tag.style.cursor = 'pointer'; tag.addEventListener('click', () => { a.play().catch(() => {}); tag.textContent = '🔊 Ovoz ijro etilmoqda'; }); });
       }
       });
     }
@@ -1526,6 +1552,54 @@ tailwind.config = {
     const t = $('#pkText').value.trim(); if (!t) { $('#pkStatus').textContent = 'Avval yozuv kiriting.'; return; }
     sendPrank({ type: 'msg', text: t.slice(0, 120), target: $('#pkTarget').value }, '💬 ' + t.slice(0, 30));
   });
+  async function deliverMedia(kind, url, label) {
+    const st = $('#pkStatus'), target = $('#pkTarget').value, pk = kind === 'audiofile' ? 'audio' : kind;
+    subscribePranks();
+    for (let i = 0; i < 15 && !(prankChan && prankChan.state === 'joined'); i++) await new Promise(r => setTimeout(r, 200));
+    try { prankChan.send({ type: 'broadcast', event: 'preload', payload: { kind: pk, url, target } }); } catch (e) {}
+    st.textContent = 'Foydalanuvchilarda oldindan yuklanmoqda...';
+    await Promise.race([preloadMedia(pk, url), new Promise(r => setTimeout(r, 6000))]);
+    await new Promise(r => setTimeout(r, kind === 'video' ? 3500 : 1500));
+    sendPrank({ type: kind, url, target }, label);
+  }
+  const libDir = () => me.id + '/pranks/lib';
+  const libLabel = n => n.replace(/^\d+-/, '').replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+  async function libRender() {
+    const box = $('#libList'); if (!box || !isAdmin() || !me) return;
+    const { data, error } = await sb.storage.from('files').list(libDir(), { limit: 100 });
+    if (error) { box.innerHTML = '<p class="text-xs text-red-500 sm:col-span-2">Kutubxonani o\'qib bo\'lmadi: ' + esc(error.message) + '</p>'; return; }
+    const items = (data || []).filter(x => x.id && x.name).sort((a, b) => String(b.name).localeCompare(String(a.name)));
+    box.innerHTML = items.length ? items.map(x => `<div class="${rowCls}"><span class="truncate flex-1">🔊 ${esc(libLabel(x.name))}</span><button type="button" data-lsend="${esc(x.name)}" class="px-2 py-1 rounded-lg border border-brand text-brand font-semibold hover:bg-brand/10">▶ Yuborish</button><button type="button" data-ldel="${esc(x.name)}" aria-label="O'chirish" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">🗑</button></div>`).join('')
+      : '<p class="text-xs text-slate-500 sm:col-span-2">Kutubxona bo\'sh. Yuqoridan ovoz qo\'shing.</p>';
+  }
+  $('#libAdd').addEventListener('click', async () => {
+    if (!isAdmin()) return;
+    const f = $('#libFile').files[0], st = $('#pkStatus'), btn = $('#libAdd');
+    if (!f || !f.type.startsWith('audio/')) { st.textContent = 'Avval audio fayl tanlang.'; return; }
+    if (f.size > MAX) { st.textContent = 'Fayl 50 MB dan katta.'; return; }
+    const base = ($('#libName').value.trim() || f.name.replace(/\.[^.]+$/, '')).replace(/[^\w\-]+/g, '_').slice(0, 40) || 'ovoz';
+    const ext = ((f.name.match(/\.[^.]+$/) || ['.mp3'])[0]).replace(/[^\w.]/g, '');
+    btn.disabled = true; st.textContent = "Kutubxonaga qo'shilmoqda...";
+    const { error } = await sb.storage.from('files').upload(libDir() + '/' + Date.now() + '-' + base + ext, f, { contentType: f.type });
+    btn.disabled = false;
+    if (error) { st.textContent = 'Xatolik: ' + error.message; return; }
+    $('#libFile').value = ''; $('#libName').value = ''; st.textContent = "Ovoz kutubxonaga qo'shildi."; libRender();
+  });
+  $('#libList').addEventListener('click', async e => {
+    if (!isAdmin()) return;
+    const sd = e.target.closest('[data-lsend]'), dl = e.target.closest('[data-ldel]');
+    if (sd) {
+      const name = sd.dataset.lsend; sd.disabled = true;
+      try {
+        const { data, error } = await sb.storage.from('files').createSignedUrl(libDir() + '/' + name, 3600);
+        if (error) throw error;
+        await deliverMedia('audiofile', data.signedUrl, '🔊 ' + libLabel(name));
+      } catch (ex) { $('#pkStatus').textContent = 'Xatolik: ' + (ex && ex.message ? ex.message : ex); }
+      sd.disabled = false;
+    } else if (dl && confirm("Bu ovoz kutubxonadan o'chirilsinmi?")) {
+      await sb.storage.from('files').remove([libDir() + '/' + dl.dataset.ldel]); libRender();
+    }
+  });
   $('#pkMediaSend').addEventListener('click', async () => {
     if (!isAdmin()) return;
     let f = $('#pkMediaFile').files[0]; const st = $('#pkStatus'), btn = $('#pkMediaSend');
@@ -1542,21 +1616,14 @@ tailwind.config = {
       if (up.error) throw up.error;
       const { data, error } = await sb.storage.from('files').createSignedUrl(path, 3600);
       if (error) throw error;
-      const target = $('#pkTarget').value, pk = kind === 'audiofile' ? 'audio' : kind, url = data.signedUrl;
-      subscribePranks();
-      for (let i = 0; i < 15 && !(prankChan && prankChan.state === 'joined'); i++) await new Promise(r => setTimeout(r, 200));
-      try { prankChan.send({ type: 'broadcast', event: 'preload', payload: { kind: pk, url, target } }); } catch (e) {}
-      st.textContent = 'Foydalanuvchilarda oldindan yuklanmoqda...';
-      await Promise.race([preloadMedia(pk, url), new Promise(r => setTimeout(r, 6000))]);
-      await new Promise(r => setTimeout(r, kind === 'video' ? 3500 : 2000));
-      sendPrank({ type: kind, url, target }, (kind === 'image' ? '🖼 ' : kind === 'video' ? '🎬 ' : '🔊 ') + f.name);
+      await deliverMedia(kind, data.signedUrl, (kind === 'image' ? '🖼 ' : kind === 'video' ? '🎬 ' : '🔊 ') + f.name);
       setTimeout(() => { try { sb.storage.from('files').remove([path]); } catch (e) {} }, 30 * 60 * 1000);
     } catch (ex) { st.textContent = 'Xatolik: ' + (ex && ex.message ? ex.message : ex); }
     finally { btn.disabled = false; }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#pkOverlay').classList.contains('hidden')) clearPranks(); });
   document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) mediaFs = true;
+    if (document.fullscreenElement) { mediaFs = true; const fb = $('#pkOverlay').querySelector('[data-fsb]'); if (fb) fb.remove(); }
     else if (mediaActive && mediaFs) clearPranks();
   });
 
@@ -1635,7 +1702,7 @@ tailwind.config = {
   }
   $('#adminBtn').addEventListener('click', () => {
     if (!isAdmin()) return;
-    show('#adminModal'); adminRender();
+    show('#adminModal'); adminRender(); libRender();
     $('#aiEndpoint').value = settings.ai_endpoint || 'https://api.openai.com/v1/chat/completions';
     $('#aiModel').value = settings.ai_model || 'gpt-4o-mini';
     $('#aiKeyInput').value = '';
