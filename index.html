@@ -50,6 +50,9 @@ tailwind.config = {
   @supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; } }
   section[id], footer[id] { scroll-margin-top: 84px; }
   .no-anim .fade-up { animation: none !important; }
+  @keyframes pkFall { to { transform: translateY(108vh) rotate(360deg); } }
+  @keyframes pkShake { 10%,90%{transform:translate3d(-1px,0,0)} 20%,80%{transform:translate3d(2px,0,0)} 30%,50%,70%{transform:translate3d(-4px,0,0)} 40%,60%{transform:translate3d(4px,0,0)} }
+  html.pk-shake { animation: pkShake .5s linear infinite; }
   kbd { font-family: inherit; }
   :focus-visible { outline: 2px solid #38BDF8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
@@ -327,8 +330,18 @@ tailwind.config = {
     <h3 class="font-bold mt-4 mb-2">Foydalanuvchilar</h3><div id="adUsers" class="space-y-2"></div>
     <h3 class="font-bold mt-5 mb-2">Fayllar</h3><div id="adFiles" class="space-y-2"></div>
     <h3 class="font-bold mt-5 mb-2">Chat</h3><button id="adClearChat" class="px-4 py-2 rounded-xl border border-red-500 text-red-500 text-sm font-semibold hover:bg-red-500/10">Butun chatni tozalash</button>
+    <h3 class="font-bold mt-5 mb-2">🎭 Hazil effektlari</h3>
+    <p class="text-xs text-slate-500 -mt-1 mb-2">Faqat ko'ngilochar vizual effektlar — hech qanday fayl, batareya yoki qurilmaga zarar yetkazmaydi, bir necha soniyadan keyin avtomatik tugaydi.</p>
+    <div class="flex flex-wrap items-center gap-2 mb-2">
+      <label class="text-sm text-slate-500">Kimga:</label>
+      <select id="pkTarget" class="px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"><option value="all">👥 Hammaga (onlayn)</option></select>
+    </div>
+    <div id="pkGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+    <p id="pkStatus" class="text-xs text-slate-500 mt-2 min-h-[1rem]"></p>
   </div>
 </div>
+
+<div id="pkOverlay" class="hidden fixed inset-0 z-[95] pointer-events-none"></div>
 
 <button id="chatFab" class="hidden fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-brand text-white shadow-xl grid place-items-center text-2xl hover:bg-blue-700" aria-label="Chat">💬<span id="fabBadge" class="hidden absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-red-500 text-white text-xs font-bold grid place-items-center"></span></button>
 <div id="chatPanel" class="hidden fixed bottom-24 right-5 z-50 w-[calc(100vw-2.5rem)] max-w-sm h-[28rem] max-h-[70vh] flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
@@ -959,13 +972,13 @@ tailwind.config = {
   async function logout() {
     await sb.auth.signOut(); me = null; sbFiles = []; msgs = [];
     if (chan) { sb.removeChannel(chan); chan = null; }
-    dmStop();
+    dmStop(); unsubscribePranks();
     hide('#profileModal'); hide('#adminModal'); section.classList.add('hidden');
     refreshAuth(); renderMine(); renderTop(); toast('Hisobdan chiqdingiz!');
   }
   async function afterAuth() {
     await loadMe(); if (!me) return;
-    await loadFiles(); subscribeChat(); await loadMsgs();
+    await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs();
     refreshAuth(); renderMine(); renderTop();
   }
   $('#authBtn').addEventListener('click', () => { if (me) logout(); else openAuth('login'); });
@@ -1148,12 +1161,106 @@ tailwind.config = {
     img.src = url; $('#pFile').value = '';
   });
 
+  const PRANKS = [
+    { id: 'invert', label: '🎨 Ranglarni invert qilish', dur: 8000 },
+    { id: 'spin', label: '🙃 Ekranni aylantirish', dur: 6000 },
+    { id: 'upside', label: '🔄 Teskari ko\'rsatish', dur: 6000 },
+    { id: 'shake', label: '📳 Ekranni silkitish', dur: 2500 },
+    { id: 'confetti', label: '🎉 Konfetti', dur: 3500 },
+    { id: 'rain', label: '🌧 Emoji yomg\'iri', dur: 5000 },
+    { id: 'dodge', label: '🏃 Qochqin tugma', dur: 8000 },
+    { id: 'alert', label: '😱 Soxta ogohlantirish', dur: 5000 },
+  ];
+  let prankChan = null, prankTimer = null, dodgeTimer = null;
+  function subscribePranks() {
+    if (prankChan || !me) return;
+    try {
+      prankChan = sb.channel('pranks', { config: { broadcast: { self: false } } })
+        .on('broadcast', { event: 'fire' }, ({ payload }) => {
+          if (payload && (payload.target === 'all' || payload.target === me.id)) runPrank(payload.type);
+        }).subscribe();
+    } catch (e) { prankChan = {}; }
+  }
+  function unsubscribePranks() {
+    if (prankChan && prankChan.unsubscribe) { try { sb.removeChannel(prankChan); } catch (e) {} }
+    prankChan = null; clearPranks();
+  }
+  function clearPranks() {
+    document.documentElement.style.filter = ''; document.documentElement.style.transform = '';
+    document.documentElement.classList.remove('pk-shake');
+    const ov = $('#pkOverlay'); ov.innerHTML = ''; ov.classList.add('hidden'); ov.classList.remove('pointer-events-auto');
+    clearTimeout(prankTimer); prankTimer = null; clearInterval(dodgeTimer); dodgeTimer = null;
+  }
+  function runPrank(type) {
+    clearPranks();
+    const meta = PRANKS.find(p => p.id === type); const dur = meta ? meta.dur : 5000;
+    const ov = $('#pkOverlay'); ov.classList.remove('hidden');
+    if (type === 'invert') { document.documentElement.style.transition = 'filter .4s'; document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)'; }
+    else if (type === 'spin') { document.documentElement.style.transition = 'transform .6s ease'; document.documentElement.style.transform = 'rotate(180deg)'; }
+    else if (type === 'upside') { document.documentElement.style.transition = 'transform .6s ease'; document.documentElement.style.transform = 'scaleY(-1)'; }
+    else if (type === 'shake') { document.documentElement.classList.add('pk-shake'); }
+    else if (type === 'confetti') {
+      const colors = ['#2563EB', '#F59E0B', '#16A34A', '#EF4444', '#A855F7', '#EC4899'];
+      let html = '';
+      for (let i = 0; i < 120; i++) {
+        const l = Math.random() * 100, delay = Math.random() * 0.6, dur2 = 2.2 + Math.random() * 1.4, c = colors[i % colors.length], rot = Math.random() * 360;
+        html += `<span style="position:absolute;top:-5%;left:${l}%;width:9px;height:14px;background:${c};opacity:.9;border-radius:2px;transform:rotate(${rot}deg);animation:pkFall ${dur2}s linear ${delay}s forwards"></span>`;
+      }
+      ov.innerHTML = html;
+    } else if (type === 'rain') {
+      const em = ['😂', '🤡', '🎈', '🐸', '🍕', '⭐'];
+      let html = '';
+      for (let i = 0; i < 40; i++) {
+        const l = Math.random() * 100, delay = Math.random() * 1.2, dur2 = 2.6 + Math.random() * 1.6, e = em[i % em.length];
+        html += `<span style="position:absolute;top:-8%;left:${l}%;font-size:28px;animation:pkFall ${dur2}s linear ${delay}s forwards">${e}</span>`;
+      }
+      ov.innerHTML = html;
+    } else if (type === 'dodge') {
+      ov.classList.add('pointer-events-auto');
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = '😝 Ushla meni!';
+      b.style.cssText = 'position:absolute;top:45%;left:45%;padding:10px 16px;border-radius:9999px;background:#2563EB;color:#fff;font-weight:700;font-size:14px;border:none;box-shadow:0 6px 18px rgba(0,0,0,.3);transition:top .18s ease,left .18s ease;cursor:pointer';
+      ov.appendChild(b);
+      const jump = () => { b.style.left = Math.random() * 78 + 8 + '%'; b.style.top = Math.random() * 74 + 8 + '%'; };
+      ov.addEventListener('mousemove', e => {
+        const r = b.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        if (Math.hypot(dx, dy) < 120) jump();
+      });
+      b.addEventListener('click', () => { b.textContent = '🎉 Ushlading!'; b.style.background = '#16A34A'; setTimeout(clearPranks, 900); });
+      dodgeTimer = setInterval(jump, 1400); jump();
+    } else if (type === 'alert') {
+      ov.classList.add('pointer-events-auto');
+      ov.innerHTML = `<div class="absolute inset-0 bg-red-600/95 flex items-center justify-center p-6">
+        <div id="pkAlertBox" class="max-w-sm w-full bg-white rounded-2xl p-6 text-center shadow-2xl">
+          <div id="pkAlertIcon" class="text-5xl mb-3">🐛</div>
+          <div id="pkAlertTxt" class="text-slate-900 font-extrabold text-lg">Fayllar shifrlanmoqda...</div>
+          <div class="text-slate-500 text-sm mt-1">Iltimos kuting</div>
+        </div></div>`;
+      setTimeout(() => {
+        const box = $('#pkAlertBox'); if (!box) return;
+        $('#pkAlertIcon').textContent = '😄'; $('#pkAlertTxt').textContent = 'Hazil edi! Hech narsa bo\'lmadi 🎉'; box.classList.add('bg-green-50');
+      }, 1800);
+    }
+    const revert = () => clearPranks();
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { revert(); document.removeEventListener('keydown', esc); } });
+    if (ov.addEventListener) ov.addEventListener('click', e => { if (type === 'alert' && e.target === ov.firstElementChild) revert(); });
+    prankTimer = setTimeout(revert, dur);
+  }
+  $('#pkGrid').innerHTML = PRANKS.map(p => `<button type="button" data-pk="${p.id}" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-brand hover:text-brand text-left">${p.label}</button>`).join('');
+  $('#pkGrid').addEventListener('click', e => {
+    const b = e.target.closest('[data-pk]'); if (!b || !isAdmin()) return;
+    const target = $('#pkTarget').value;
+    subscribePranks();
+    const fire = () => { prankChan.send({ type: 'broadcast', event: 'fire', payload: { type: b.dataset.pk, target } }); if (target === 'all' || target === me.id) runPrank(b.dataset.pk); $('#pkStatus').textContent = 'Yuborildi: ' + b.textContent + (target === 'all' ? ' (hammaga)' : ' (1 foydalanuvchiga)'); };
+    if (prankChan && prankChan.state === 'joined') fire(); else setTimeout(fire, 400);
+  });
+
   const rowCls = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm';
   async function adminRender() {
     if (!isAdmin()) return;
     await loadProfiles(); await loadFiles();
     const ids = Object.keys(profiles);
     $('#adStats').textContent = `Foydalanuvchilar: ${ids.length} • Fayllar: ${sbFiles.length} • Xabarlar: ${msgs.length}`; adminCharts(ids);
+    const curT = $('#pkTarget').value; $('#pkTarget').innerHTML = '<option value="all">👥 Hammaga (onlayn)</option>' + ids.filter(k => k !== me.id).map(k => `<option value="${k}">${esc(profiles[k].username)}</option>`).join(''); if ([...$('#pkTarget').options].some(o => o.value === curT)) $('#pkTarget').value = curT;
     $('#adUsers').innerHTML = ids.map(k => {
       const u = profiles[k];
       return `<div class="${rowCls}">${avatarHTML(u, 'w-8 h-8 text-xs')}<span class="font-semibold truncate flex-1">${esc(u.username)}</span>
@@ -1682,7 +1789,7 @@ tailwind.config = {
 
   /* ===== Ishga tushirish ===== */
   (async () => {
-    try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); await loadMsgs(); } } catch (e) { console.error(e); }
+    try { await loadMe(); if (me) { await loadFiles(); subscribeChat(); subscribePranks(); await loadMsgs(); } } catch (e) { console.error(e); }
     refreshAuth(); renderMine(); renderTop(); renderSaved(); icons(); bootFromHash();
   })();
 })();
