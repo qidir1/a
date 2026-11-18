@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="author" content="Komuljonov Qutlimurod">
+<meta name="author" content="Unknown">
 <meta name="description" content="Rasm, video va hujjatlarni bir soniyada toping, ko'ring va yuklab oling! 1 Qidiruv — bepul, to'liq o'zbek tilida.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="1 Qidiruv — Barchasi bitta qidiruvda">
@@ -162,6 +162,15 @@ tailwind.config = {
   <div id="results" class="space-y-6"></div>
 </section>
 
+<!-- LATEST FILES -->
+<section id="latest" class="hidden max-w-4xl mx-auto px-4 pb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 grid place-items-center text-lg">🆕</span>
+    <div><h2 class="text-lg sm:text-xl font-bold">So'nggi yuklangan fayllar</h2><p class="text-sm text-slate-500">Ekranda ko'ringan fayl ko'rilgan hisoblanadi</p></div>
+  </div>
+  <div id="latestList" class="grid gap-3 sm:grid-cols-2 md:grid-cols-3"></div>
+</section>
+
 <!-- TOP FILES -->
 <section id="top" class="hidden max-w-4xl mx-auto px-4 py-10">
   <div class="flex items-center gap-3 mb-5">
@@ -278,14 +287,14 @@ tailwind.config = {
     </div>
     <div>
       <h4 class="font-bold mb-3">Sayt haqida ma'lumot</h4>
-      <p class="text-sm text-slate-500">Yaratuvchi: <strong class="text-slate-800 dark:text-slate-100">Uzbekistan FVV</strong></p>
+      <p class="text-sm text-slate-500">Yaratuvchi: <strong class="text-slate-800 dark:text-slate-100">Unknown</strong></p>
       <p class="text-sm text-slate-500 mt-2">Qidiruvda faqat foydalanuvchilar yuklagan fayllar ko'rsatiladi.</p>
     </div>
   </div>
   <div class="border-t border-slate-200 dark:border-slate-800">
     <div class="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
       <p>© <span id="yr">2026</span> 1 Qidiruv. Barcha huquqlar himoyalangan.</p>
-      <p class="font-semibold text-slate-700 dark:text-slate-200">Yaratuvchi: Uzbekistan FVV</p>
+      <p class="font-semibold text-slate-700 dark:text-slate-200">Yaratuvchi: Unknown</p>
     </div>
   </div>
 </footer>
@@ -481,7 +490,7 @@ tailwind.config = {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const linkify = t => t.replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer" class="underline break-all">' + u + '</a>');
-  const icons = () => { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} };
+  const icons = () => { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} try { observeCards(); } catch (e) {} };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   /* Theme */
@@ -685,16 +694,17 @@ tailwind.config = {
 
   function fileCard(r, withDelete, terms, mode) {
     const url = esc(r.url || ''), id = esc(r.id);
-    const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.at ? ' • ' + esc(timeAgo(r.at)) : ''}`;
+    const meta_ = `${kindLabel(r.kind)} • ${fmtSize(r.size)} • <span data-vc="${id}">👁 ${r.views || 0} ko'rish</span>${r.at ? ' • ' + esc(timeAgo(r.at)) : ''}`;
+    const fresh = r.at && (Date.now() - r.at) < 864e5 ? '<span class="mr-1.5 align-middle text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">YANGI</span>' : '';
     const owner = r.ownerName ? `<div class="text-xs text-slate-500 mt-0.5">👤 Yuklagan: <strong class="text-slate-700 dark:text-slate-200">${esc(r.ownerName)}</strong>${dmBtn(r)}</div>` : '';
     const sel = withDelete ? `<label class="absolute top-2 left-2 z-10 w-6 h-6 rounded-md bg-white/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-600 grid place-items-center cursor-pointer"><input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600"></label>` : '';
     const del = withDelete ? `<button data-edit="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-brand hover:text-brand">Tahrirlash</button><button data-del="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-red-500 hover:text-red-500">O'chirish</button>` : '';
     if (mode === 'list') {
-      return `<div class="fade-up relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      return `<div data-vid="${id}" class="fade-up relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         ${sel ? `<input type="checkbox" data-sel="${id}" aria-label="Tanlash" class="accent-blue-600 w-4 h-4 shrink-0">` : ''}
         ${thumbHTML(r, false)}
         <div class="min-w-0 flex-1">
-          <div class="font-semibold truncate">${hl(r.title, terms)}</div>
+          <div class="font-semibold truncate">${fresh}${hl(r.title, terms)}</div>
           ${r.desc ? `<div class="text-sm text-brand dark:text-accent truncate">✨ ${hl(r.desc, terms)}</div>` : ''}
           <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}${r.ownerName ? ' • 👤 ' + esc(r.ownerName) : ''}</div>
         </div>
@@ -702,10 +712,10 @@ tailwind.config = {
           <button data-open="${id}" class="text-xs font-semibold px-3 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button>
           <a data-dl href="${url}" download="${esc(r.name)}" class="hidden sm:inline-block text-xs font-semibold px-3 py-2 rounded-lg border border-brand text-brand hover:bg-brand/10">Yuklab olish</a>${del}</div></div>`;
     }
-    return `<div class="fade-up relative rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition hover:shadow-lg hover:border-brand/50">
+    return `<div data-vid="${id}" class="fade-up relative rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition hover:shadow-lg hover:border-brand/50">
       ${sel}<span class="absolute top-2 right-2 z-10 text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-black/55 text-white backdrop-blur pointer-events-none">${kindLabel(r.kind)}</span>${thumbHTML(r, true)}
       <div class="p-3">
-        <div class="text-sm font-semibold truncate">${hl(r.title, terms)}</div>
+        <div class="text-sm font-semibold truncate">${fresh}${hl(r.title, terms)}</div>
         <div class="text-xs text-slate-500 mt-0.5 truncate">${meta_}</div>
         ${owner}
         ${r.desc ? `<p class="mt-2 text-sm font-semibold leading-snug px-3 py-2 rounded-lg border-l-4 border-brand bg-brand/10 text-brand dark:text-accent line-clamp-3">✨ ${hl(r.desc, terms)}</p>` : ''}
@@ -845,6 +855,75 @@ tailwind.config = {
     toastTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%, -150%)'; }, 2800);
   }
 
+  /* ===== Ko'rishlar: fayl ekranda ko'ringanda ham hisoblanadi (ochish shart emas) ===== */
+  let seenSet = null, seenOwner = null, viewRefreshT = null, io = null;
+  const vTimers = new Map();
+  const seenKey = () => 'seen:' + (currentUser() || '_');
+  function seen() {
+    const u = currentUser();
+    if (!seenSet || seenOwner !== u) { seenOwner = u; seenSet = new Set(lsGet(seenKey(), [])); }
+    return seenSet;
+  }
+  function viewsText(r) { return '👁 ' + (r.views || 0) + " ko'rish"; }
+  function paintViews() {
+    $$('[data-vc]').forEach(el => { const r = itemById(el.dataset.vc); if (r) el.textContent = viewsText(r); });
+    if (curId) { const r = itemById(curId); if (r) $('#vMeta').textContent = `${r.name} • ${fmtSize(r.size)} • ${viewsText(r)}`; }
+  }
+  function scheduleViewRefresh() {
+    clearTimeout(viewRefreshT);
+    viewRefreshT = setTimeout(async () => {
+      try {
+        await loadFiles(); paintViews();
+        updateStats(await allItems());
+        if (!$('#top').classList.contains('hidden')) renderTop();
+      } catch (e) {}
+    }, 1500);
+  }
+  async function registerView(r, now) {
+    if (!r || !currentUser()) return;
+    const s = seen(); if (s.has(r.key)) return;
+    if (r.remote) {
+      const v = getViewers(r.key), u = currentUser();
+      if (!v.includes(u)) { v.push(u); setViewers(r.key, v); }
+      r.views = getViewers(r.key).length;
+      s.add(r.key); lsSet(seenKey(), [...s].slice(-2000)); paintViews(); return;
+    }
+    s.add(r.key);
+    const { error } = await sb.rpc('register_view', { fid: r.sid });
+    if (error) { s.delete(r.key); return; }
+    lsSet(seenKey(), [...s].slice(-2000));
+    if (now) { await loadFiles(); paintViews(); } else scheduleViewRefresh();
+  }
+  function observeCards() {
+    if (!('IntersectionObserver' in window)) return;
+    if (!io) io = new IntersectionObserver(entries => entries.forEach(en => {
+      const el = en.target;
+      if (en.isIntersecting) {
+        if (vTimers.has(el)) return;
+        vTimers.set(el, setTimeout(() => {
+          vTimers.delete(el);
+          if (document.hidden || !el.isConnected) return;
+          const r = itemById(el.dataset.vid);
+          if (r && canSee(r)) registerView(r);
+          io.unobserve(el);
+        }, 800));
+      } else { clearTimeout(vTimers.get(el)); vTimers.delete(el); }
+    }), { threshold: 0.6 });
+    $$('[data-vid]').forEach(el => { if (!el.__vo) { el.__vo = 1; io.observe(el); } });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !io) return;
+    io.disconnect(); vTimers.forEach(t => clearTimeout(t)); vTimers.clear();
+    $$('[data-vid]').forEach(el => { el.__vo = 0; }); observeCards();
+  });
+  function renderLatest(list) {
+    const sec = $('#latest'), box = $('#latestList');
+    const l = (list || []).filter(r => r.at).sort((a, b) => b.at - a.at).slice(0, 6);
+    if (!currentUser() || !l.length) { sec.classList.add('hidden'); box.innerHTML = ''; return; }
+    box.innerHTML = l.map(r => fileCard(r, false, [], 'grid')).join('');
+    sec.classList.remove('hidden'); icons();
+  }
+
   /* ===== Faylni ochish (oldingi/keyingi, kattalashtirish, o'xshash fayllar) ===== */
   const viewer = $('#viewer'); let viewerUrl = null, curId = null, navIds = [];
   function closeViewer() {
@@ -872,13 +951,8 @@ tailwind.config = {
     const remote = String(id).startsWith('r');
     let r = itemById(id);
     if (!r || !canSee(r)) { toast("Fayl topilmadi yoki ruxsat yo'q!", true); return; }
-    if (remote) {
-      const v = getViewers(r.key), u = currentUser();
-      if (!v.includes(u)) { v.push(u); setViewers(r.key, v); r.views = v.length; }
-    } else {
-      const { error } = await sb.rpc('register_view', { fid: r.sid });
-      if (!error) { await loadFiles(); r = sbFiles.find(c => c.id === id) || r; }
-    }
+    await registerView(r, true);
+    r = itemById(id) || r;
     curId = id; addRecent(r);
     const url = esc(r.url || '');
     const t = /\.pdf$/i.test(r.name) ? 'application/pdf' : /\.txt$/i.test(r.name) ? 'text/plain' : '';
@@ -957,7 +1031,7 @@ tailwind.config = {
     const o = e.target.closest('[data-open]');
     if (o) {
       e.preventDefault();
-      const box = o.closest('#results,#topList,#myFiles,#savedList,#recentList');
+      const box = o.closest('#results,#topList,#myFiles,#savedList,#recentList,#latestList');
       if (box) navIds = [...new Set($$('[data-open]', box).map(x => x.dataset.open))];
       openFile(o.dataset.open); return;
     }
@@ -966,7 +1040,7 @@ tailwind.config = {
 
   /* ===== Top fayllar ===== */
   async function renderTop() {
-    let list = await allItems(); updateStats(list);
+    let list = await allItems(); updateStats(list); renderLatest(list);
     const box = $('#topList');
     if (!list.length) {
       box.innerHTML = `<div class="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500">Hali fayl yuklanmagan. Birinchi bo'lib fayl yuklang!</div>`;
@@ -979,12 +1053,12 @@ tailwind.config = {
         ? `<img src="${esc(r.url || '')}" alt="" loading="lazy" class="w-14 h-14 rounded-xl object-cover shrink-0">`
         : `<div class="w-14 h-14 rounded-xl shrink-0 grid place-items-center bg-brand/10 text-brand"><i data-lucide="${r.kind === 'vid' ? 'play-circle' : 'file-text'}" class="w-6 h-6"></i></div>`;
       const label = r.kind === 'img' ? 'Rasm' : r.kind === 'vid' ? 'Video' : 'Hujjat';
-      return `<div class="fade-up flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      return `<div data-vid="${esc(r.id)}" class="fade-up flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <div class="w-8 h-8 shrink-0 rounded-full grid place-items-center text-sm font-extrabold ${medal[i] || 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">${i + 1}</div>
         ${thumb}
         <div class="min-w-0 flex-1"><div class="font-semibold truncate">${esc(r.title)}</div>
           ${r.desc ? `<div class="text-sm font-medium text-brand dark:text-accent truncate">✨ ${esc(r.desc)}</div>` : ''}
-          <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • 👁 ${r.views || 0} ko'rish${r.ownerName ? ' • 👤 ' + esc(r.ownerName) : ''}</div></div>
+          <div class="text-xs text-slate-500 mt-0.5 truncate">${label} • ${fmtSize(r.size)} • <span data-vc="${esc(r.id)}">👁 ${r.views || 0} ko'rish</span>${r.ownerName ? ' • 👤 ' + esc(r.ownerName) : ''}</div></div>
         <button data-open="${r.id}" class="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-brand text-white hover:bg-blue-700">Ochish</button></div>`;
     }).join('');
     icons();
@@ -2138,7 +2212,7 @@ tailwind.config = {
   });
 
   /* ===== Chat: emoji ===== */
-  const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🔥', '🎉', '😢', '😮', '❤️', '👋', '✅'];
+  const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🔥', '🎉', '😢', '😮', '❤️', '👋', '✅', '🤡'];
   [['#chatForm', '#chatIn'], ['#dmForm', '#dmIn']].forEach(([f, i]) => {
     const form = $(f), inp = $(i); form.classList.add('relative');
     const btn = document.createElement('button');
