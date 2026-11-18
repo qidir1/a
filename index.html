@@ -312,6 +312,18 @@ tailwind.config = {
   </div>
 </div>
 
+<div id="pinModal" class="hidden fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+    <div class="flex items-center justify-between"><h2 class="text-lg font-bold">🔐 ADMIN PINKODI</h2><button id="pinX" type="button" aria-label="Yopish" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
+    <p class="text-xs text-slate-500 mt-1">Bu amalni bajarish uchun ADMIN PINKODI kiritilishi kerak.</p>
+    <form id="pinForm" class="mt-4 grid gap-2">
+      <input id="pinIn" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="ADMIN PINKODI" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:border-brand text-sm">
+      <p id="pinErr" class="text-sm text-red-500 min-h-[1.25rem]" aria-live="polite"></p>
+      <div class="grid grid-cols-2 gap-2"><button class="px-4 py-2.5 rounded-xl bg-brand hover:bg-blue-700 text-white font-semibold text-sm transition">Tasdiqlash</button><button id="pinCancel" type="button" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-semibold hover:border-brand">Bekor qilish</button></div>
+    </form>
+  </div>
+</div>
+
 <div id="editModal" class="hidden fixed inset-0 z-[67] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
   <div class="w-full max-w-md max-h-[92vh] overflow-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
     <div class="flex items-center justify-between"><h2 class="text-lg font-bold">Faylni tahrirlash</h2><button id="eClose" type="button" aria-label="Yopish" class="w-9 h-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-100 dark:hover:bg-slate-800 text-lg leading-none">×</button></div>
@@ -760,6 +772,7 @@ tailwind.config = {
       : `<p class="text-sm text-slate-500">${q ? 'Hech narsa topilmadi.' : 'Hali fayl yuklanmagan.'}</p>`;
     $$('#myFiles [data-del]').forEach(b => b.addEventListener('click', async () => {
       if (!confirm("Bu fayl o'chirilsinmi?")) return;
+      if (isAdmin() && !(await askPin())) return;
       await deleteFile(b.dataset.del); renderMine(); renderTop(); renderSaved(); toast("Fayl o'chirildi!");
     }));
     updateSel(); icons();
@@ -1759,6 +1772,41 @@ tailwind.config = {
     try { await askAI(txt); } finally { aiBusy = false; $('#aiSendBtn').disabled = false; $('#aiIn').focus(); }
   });
 
+  /* ===== ADMIN PINKODI (o'chirish va toifa almashtirish uchun) ===== */
+  const PIN_HASH = 'f23f7e38a3d7b6828221b09d3c9bc821cfbe17a96394aba35362ef107701f034';
+  let pinResolve = null, pinFails = 0, pinLockUntil = 0;
+  async function sha256(t) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  function pinDone(ok) {
+    hide('#pinModal'); $('#pinIn').value = '';
+    const r = pinResolve; pinResolve = null; if (r) r(ok);
+  }
+  function askPin() {
+    if (pinResolve) pinDone(false);
+    return new Promise(res => {
+      pinResolve = res; $('#pinErr').textContent = ''; $('#pinIn').value = '';
+      show('#pinModal'); setTimeout(() => $('#pinIn').focus(), 50);
+    });
+  }
+  $('#pinForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('#pinErr');
+    if (Date.now() < pinLockUntil) { err.textContent = 'Juda ko\'p xato. ' + Math.ceil((pinLockUntil - Date.now()) / 1000) + ' soniyadan keyin urinib ko\'ring.'; return; }
+    let ok = false;
+    try { ok = (await sha256($('#pinIn').value.trim())) === PIN_HASH; }
+    catch (ex) { err.textContent = 'PIN tekshirib bo\'lmadi (sayt https orqali ochilishi kerak).'; return; }
+    if (ok) { pinFails = 0; pinDone(true); return; }
+    pinFails++; $('#pinIn').value = '';
+    if (pinFails >= 5) { pinFails = 0; pinLockUntil = Date.now() + 30000; err.textContent = "5 marta xato kiritildi. 30 soniya kuting."; }
+    else err.textContent = "ADMIN PINKODI noto'g'ri.";
+  });
+  $('#pinX').addEventListener('click', () => pinDone(false));
+  $('#pinCancel').addEventListener('click', () => pinDone(false));
+  $('#pinModal').addEventListener('click', e => { if (e.target.id === 'pinModal') pinDone(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pinResolve) pinDone(false); });
+
   const rowCls = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm';
   async function adminRender() {
     if (!isAdmin()) return;
@@ -1785,14 +1833,15 @@ tailwind.config = {
   $('#adClose').addEventListener('click', () => hide('#adminModal'));
   $('#adminModal').addEventListener('change', async e => {
     const k = e.target.dataset.ar; if (!k || !isAdmin()) return;
+    if (!(await askPin())) { toast('Toifa o\'zgartirilmadi', true); adminRender(); return; }
     const { error } = await sb.rpc('admin_set_role', { uid: k, p_role: e.target.value });
     toast(error ? 'Xatolik: ' + error.message : 'Toifa yangilandi', !!error); adminRender(); chatRender();
   });
   $('#adminModal').addEventListener('click', async e => {
     if (!isAdmin()) return;
     const au = e.target.dataset.au, af = e.target.dataset.af;
-    if (au && confirm("Foydalanuvchi o'chirilsinmi?")) { const { error } = await sb.rpc('admin_delete_user', { uid: au }); if (error) toast(error.message, true); delete profiles[au]; adminRender(); }
-    if (af && confirm("Fayl o'chirilsinmi?")) { await deleteFile(af); adminRender(); renderMine(); renderTop(); }
+    if (au && confirm("Foydalanuvchi o'chirilsinmi?") && await askPin()) { const { error } = await sb.rpc('admin_delete_user', { uid: au }); if (error) toast(error.message, true); delete profiles[au]; adminRender(); }
+    if (af && confirm("Fayl o'chirilsinmi?") && await askPin()) { await deleteFile(af); adminRender(); renderMine(); renderTop(); }
   });
   $('#adClearChat').addEventListener('click', async () => {
     if (isAdmin() && confirm('Chat tozalansinmi?')) { await sb.from('messages').delete().gte('id', 0); msgs = []; chatRender(); adminRender(); }
@@ -2173,6 +2222,7 @@ tailwind.config = {
   $('#myDelSel').addEventListener('click', async () => {
     const ids = selectedIds(); if (!ids.length) return;
     if (!confirm(ids.length + " ta fayl o'chirilsinmi?")) return;
+    if (isAdmin() && !(await askPin())) return;
     try { await deleteMany(ids); } catch (e) { toast("O'chirishda xatolik", true); return; }
     renderMine(); renderTop(); renderSaved(); toast(ids.length + " ta fayl o'chirildi!");
   });
